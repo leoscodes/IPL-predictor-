@@ -1,67 +1,538 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPL Predictor</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IPL Playoff Predictor 2025</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style type="text/css">
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #0a0a0f;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica Neue, Arial, sans-serif;
+  min-height: 100vh;
+}
+.bg-glow {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(234,26,133,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0,75,160,0.06) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+.container { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; position: relative; z-index: 1; }
+.header { text-align: center; padding-top: 20px; margin-bottom: 8px; }
+.logo-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+.title {
+  font-size: 28px; font-weight: 900; letter-spacing: 3px;
+  background: linear-gradient(135deg, #FFCB05, #EA1A85, #004BA0);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1.2;
+}
+.subtitle { font-size: 13px; letter-spacing: 6px; color: #666666; margin-top: 4px; font-weight: 600; }
+.header-rule { width: 60px; height: 2px; background: linear-gradient(90deg, #FFCB05, #EA1A85); margin: 12px auto 0; border-radius: 2px; }
+
+.nav { display: flex; gap: 4px; justify-content: center; margin: 20px 0; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 4px; }
+.nav-btn { flex: 1; padding: 10px 0; background: transparent; border: none; color: #666666; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; cursor: pointer; border-radius: 8px; }
+.nav-btn.active { background: rgba(255,255,255,0.08); color: #ffffff; }
+
+.screen { display: none; margin-top: 8px; }
+.screen.active { display: block; }
+
+.hero-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 24px; }
+.hero-title { font-size: 18px; font-weight: 800; letter-spacing: 2px; margin-bottom: 20px; }
+.step { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.step-num { font-size: 22px; font-weight: 900; color: rgba(255,203,5,0.25); font-family: monospace; min-width: 36px; }
+.step-text { font-size: 15px; color: #cccccc; }
+
+.scoring-box { margin-top: 20px; padding: 16px 18px; background: rgba(255,203,5,0.05); border: 1px solid rgba(255,203,5,0.12); border-radius: 10px; }
+.scoring-title { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #FFCB05; margin-bottom: 10px; }
+.scoring-rule { margin: 6px 0; font-size: 14px; color: #bbbbbb; }
+.pts { font-weight: 800; color: #FFCB05; font-family: monospace; margin-right: 6px; }
+.scoring-note { margin-top: 10px; font-size: 12px; color: #777777; font-style: italic; }
+
+.cta-btn { display: block; width: 100%; margin-top: 20px; padding: 14px 0; background: linear-gradient(135deg, #EA1A85, #004BA0); border: none; border-radius: 10px; color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: 2px; cursor: pointer; }
+.player-count { text-align: center; margin-top: 16px; font-size: 13px; color: #555555; }
+
+.input-group { margin-bottom: 20px; }
+.label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #888888; margin-bottom: 8px; }
+.text-input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #ffffff; font-size: 16px; outline: none; }
+
+.warning-box { padding: 10px 14px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.2); border-radius: 8px; font-size: 13px; color: #eab308; margin-bottom: 16px; display: none; }
+
+.pick-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #888888; margin-bottom: 12px; }
+.pick-count { color: #FFCB05; }
+
+.teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.team-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; cursor: pointer; background: rgba(255,255,255,0.03); }
+.rank-badge { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; }
+.team-card.selected .rank-badge { display: flex; }
+.team-short { font-size: 20px; font-weight: 900; letter-spacing: 1px; color: #888888; }
+.team-name-small { font-size: 11px; margin-top: 2px; color: #666666; }
+
+.order-section { margin-top: 20px; display: none; }
+.order-section.show { display: block; }
+.order-list { display: flex; flex-direction: column; gap: 6px; }
+.order-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 3px solid #ffffff; }
+.order-rank { font-size: 14px; font-weight: 900; color: #FFCB05; font-family: monospace; min-width: 28px; }
+.order-team-name { flex: 1; font-size: 14px; color: #dddddd; }
+.order-btns { display: flex; flex-direction: column; gap: 2px; }
+.order-btn { background: rgba(255,255,255,0.1); border: none; color: #ffffff; font-size: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+.order-btn:disabled { opacity: 0.3; }
+
+.lock-btn { display: block; width: 100%; margin-top: 24px; padding: 16px 0; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 12px; color: #ffffff; font-size: 15px; font-weight: 800; letter-spacing: 1.5px; cursor: pointer; opacity: 0.4; }
+.lock-btn.ready { opacity: 1; }
+
+.lb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.lb-title { font-size: 18px; font-weight: 800; letter-spacing: 2px; }
+.refresh-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #aaaaaa; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+
+.results-bar { padding: 12px 16px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.15); border-radius: 10px; margin-bottom: 16px; display: none; }
+.results-bar.show { display: block; }
+.results-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #22c55e; display: block; margin-bottom: 8px; }
+.results-teams { display: flex; gap: 6px; flex-wrap: wrap; }
+.result-chip { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; }
+
+.empty-state { text-align: center; padding: 40px 20px; }
+.empty-text { color: #666666; font-size: 15px; margin-bottom: 16px; }
+
+.lb-list { display: flex; flex-direction: column; gap: 6px; }
+.lb-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; gap: 12px; flex-wrap: wrap; }
+.lb-left { display: flex; align-items: center; gap: 12px; min-width: 120px; }
+.lb-rank { font-size: 18px; font-weight: 900; color: rgba(255,255,255,0.15); font-family: monospace; min-width: 28px; }
+.lb-name { font-size: 15px; font-weight: 700; color: #eeeeee; }
+.lb-time { font-size: 11px; color: #555555; margin-top: 2px; }
+.lb-teams { display: flex; gap: 4px; flex-wrap: wrap; }
+.lb-chip { padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+.lb-score { display: flex; align-items: baseline; gap: 3px; min-width: 48px; justify-content: flex-end; }
+.score-num { font-size: 24px; font-weight: 900; color: #FFCB05; font-family: monospace; }
+.score-suffix { font-size: 11px; color: #888888; font-weight: 600; }
+
+.admin-section { margin-top: 24px; text-align: center; }
+.admin-btn { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #666666; padding: 8px 20px; border-radius: 8px; font-size: 12px; cursor: pointer; letter-spacing: 1px; }
+.admin-panel { margin-top: 16px; padding: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; text-align: left; display: none; }
+.admin-panel.show { display: block; }
+.admin-label { font-size: 13px; color: #aaaaaa; margin-bottom: 12px; }
+.admin-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-team-btn { padding: 6px 14px; border: 1px solid #333333; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; background: transparent; color: #999999; }
+.admin-actions { display: flex; gap: 10px; margin-top: 16px; }
+.admin-save { padding: 8px 20px; background-color: #22c55e; border: none; border-radius: 8px; color: #ffffff; font-size: 13px; font-weight: 700; cursor: pointer; }
+.admin-save:disabled { opacity: 0.4; }
+.admin-cancel { padding: 8px 20px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #999999; font-size: 13px; cursor: pointer; }
+
+.legend { display: none; flex-wrap: wrap; gap: 16px; margin-top: 20px; justify-content: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #777777; }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.footer { text-align: center; margin-top: 32px; font-size: 12px; color: #444444; letter-spacing: 0.5px; }
+</style>
+
 </head>
 <body>
-    <header>
-        <nav>
-            <button class="cta-btn">Call To Action</button>
-            <button class="nav-btn">Navigation</button>
-        </nav>
-    </header>
-    <section class="team-card">
-        <h2>Team Card</h2>
-    </section>
-    <section class="lb-row">
-        <div class="rank-badge">1</div>
-    </section>
-    <div class="warning-box">Warning</div>
-    <div class="error-box">Error</div>
-    <button class="admin-team-btn">Admin Team</button>
-    <script src="script.js"></script>
+<div class="bg-glow"></div>
+<div class="container" id="app">
+  <div class="header">
+    <span class="logo-icon">&#127951;</span>
+    <h1 class="title">IPL PLAYOFF PREDICTOR</h1>
+    <p class="subtitle">2025 SEASON</p>
+    <div class="header-rule"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" data-screen="home" onclick="switchScreen('home')">HOME</button>
+    <button class="nav-btn" data-screen="predict" onclick="switchScreen('predict')">PREDICT</button>
+    <button class="nav-btn" data-screen="leaderboard" onclick="switchScreen('leaderboard')">LEADERBOARD</button>
+  </div>
+
+  <div class="screen active" id="screen-home">
+    <div class="hero-card">
+      <h2 class="hero-title">HOW IT WORKS</h2>
+      <div class="step"><span class="step-num">01</span><span class="step-text">Enter your name</span></div>
+      <div class="step"><span class="step-num">02</span><span class="step-text">Pick 4 playoff teams in order</span></div>
+      <div class="step"><span class="step-num">03</span><span class="step-text">Lock in your prediction</span></div>
+      <div class="step"><span class="step-num">04</span><span class="step-text">Wait for results and settle bragging rights</span></div>
+      <div class="scoring-box">
+        <div class="scoring-title">SCORING</div>
+        <p class="scoring-rule"><span class="pts">+10</span> for each correct playoff team</p>
+        <p class="scoring-rule"><span class="pts">+5</span> bonus for correct finishing position</p>
+        <p class="scoring-note">Max possible: 60 points (all 4 teams in exact order)</p>
+      </div>
+      <button class="cta-btn" onclick="switchScreen('predict')">MAKE YOUR PICK</button>
+    </div>
+    <p class="player-count" id="player-count">Loading predictions...</p>
+  </div>
+
+  <div class="screen" id="screen-predict">
+    <div class="input-group">
+      <label class="label">YOUR NAME</label>
+      <input class="text-input" id="name-input" placeholder="Enter your name..." maxlength="20" />
+    </div>
+    <div class="warning-box" id="overwrite-warning"></div>
+    <p class="pick-label">PICK YOUR 4 PLAYOFF TEAMS <span class="pick-count" id="pick-count">(0/4)</span></p>
+    <div class="teams-grid" id="teams-grid"></div>
+    <div class="order-section" id="order-section">
+      <p class="label">YOUR PREDICTED ORDER</p>
+      <div class="order-list" id="order-list"></div>
+    </div>
+    <button class="lock-btn" id="lock-btn" onclick="savePrediction()">LOCK IN PREDICTION</button>
+  </div>
+
+  <div class="screen" id="screen-leaderboard">
+    <div class="lb-header">
+      <h2 class="lb-title">PREDICTIONS</h2>
+      <button class="refresh-btn" onclick="loadData()">Refresh</button>
+    </div>
+    <div class="results-bar" id="results-bar">
+      <span class="results-label">ACTUAL PLAYOFF TEAMS:</span>
+      <div class="results-teams" id="results-teams"></div>
+    </div>
+    <div id="lb-content"></div>
+    <div class="admin-section">
+      <button class="admin-btn" id="admin-toggle" onclick="toggleAdmin()">Set Actual Results (Admin)</button>
+      <div class="admin-panel" id="admin-panel">
+        <p class="admin-label">Select the 4 playoff teams in finishing order:</p>
+        <div class="admin-grid" id="admin-grid"></div>
+        <div class="admin-actions">
+          <button class="admin-save" id="admin-save" onclick="saveResults()" disabled>Save Results</button>
+          <button class="admin-cancel" onclick="toggleAdmin()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="legend" id="legend">
+      <span class="legend-item"><span class="legend-dot" style="background-color:#22c55e"></span> Correct team + position (+15)</span>
+      <span class="legend-item"><span class="legend-dot" style="background-color:#eab308"></span> Correct team, wrong position (+10)</span>
+      <span class="legend-item"><span class="legend-dot" style="background-color:#dc2626"></span> Wrong team (0)</span>
+    </div>
+  </div>
+
+  <p class="footer">Share this link with your friends - predictions sync in real-time</p>
+</div>
+
+<script type="text/javascript">
+var firebaseConfig = {
+  apiKey: "AIzaSyAouckmZI4-q7kabVYWNDAUojsw-Z-Z1NM",
+  authDomain: "ipl-predictor-719f8.firebaseapp.com",
+  databaseURL: "https://ipl-predictor-719f8-default-rtdb.firebaseio.com",
+  projectId: "ipl-predictor-719f8",
+  storageBucket: "ipl-predictor-719f8.firebasestorage.app",
+  messagingSenderId: "858232401972",
+  appId: "1:858232401972:web:6512a11c096dfc237b5a61"
+};
+
+var TEAMS = [
+  { id: "csk", name: "Chennai Super Kings", short: "CSK", color: "#FFCB05", bg: "#1C1C5E", dt: true },
+  { id: "mi", name: "Mumbai Indians", short: "MI", color: "#004BA0", bg: "#004BA0", dt: false },
+  { id: "rcb", name: "Royal Challengers Bengaluru", short: "RCB", color: "#EC1C24", bg: "#2B2B2B", dt: false },
+  { id: "kkr", name: "Kolkata Knight Riders", short: "KKR", color: "#3A225D", bg: "#3A225D", dt: false },
+  { id: "srh", name: "Sunrisers Hyderabad", short: "SRH", color: "#F7A721", bg: "#E04F16", dt: false },
+  { id: "rr", name: "Rajasthan Royals", short: "RR", color: "#EA1A85", bg: "#254AA5", dt: false },
+  { id: "dc", name: "Delhi Capitals", short: "DC", color: "#17479E", bg: "#17479E", dt: false },
+  { id: "pbks", name: "Punjab Kings", short: "PBKS", color: "#ED1B24", bg: "#A71930", dt: false },
+  { id: "gt", name: "Gujarat Titans", short: "GT", color: "#1B2133", bg: "#1B2133", dt: false },
+  { id: "lsg", name: "Lucknow Super Giants", short: "LSG", color: "#A72056", bg: "#29487D", dt: false }
+];
+
+var db = null;
+var allPredictions = [];
+var actualResults = [];
+var selectedTeams = [];
+var tempResults = [];
+var currentScreen = "home";
+
+function getTeam(id) {
+  for (var i = 0; i < TEAMS.length; i++) {
+    if (TEAMS[i].id === id) return TEAMS[i];
+  }
+  return null;
+}
+
+function switchScreen(name) {
+  currentScreen = name;
+  var screens = document.querySelectorAll(".screen");
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove("active");
+  document.getElementById("screen-" + name).classList.add("active");
+  var btns = document.querySelectorAll(".nav-btn");
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].getAttribute("data-screen") === name) btns[i].classList.add("active");
+    else btns[i].classList.remove("active");
+  }
+  if (name === "leaderboard") renderLeaderboard();
+}
+
+function loadData() {
+  if (!db) return;
+  db.ref("predictions").on("value", function(snap) {
+    var data = snap.val();
+    allPredictions = data ? Object.values(data) : [];
+    var el = document.getElementById("player-count");
+    if (el) el.textContent = allPredictions.length + " prediction" + (allPredictions.length !== 1 ? "s" : "") + " locked in so far";
+    if (currentScreen === "leaderboard") renderLeaderboard();
+  });
+  db.ref("results").on("value", function(snap) {
+    actualResults = snap.val() || [];
+    if (currentScreen === "leaderboard") renderLeaderboard();
+  });
+}
+
+function renderTeamsGrid() {
+  var grid = document.getElementById("teams-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (var i = 0; i < TEAMS.length; i++) {
+    var team = TEAMS[i];
+    var card = document.createElement("div");
+    card.className = "team-card";
+    card.setAttribute("data-id", team.id);
+    var badgeColor = team.dt ? "#1C1C5E" : "#ffffff";
+    card.innerHTML = '<span class="rank-badge" style="background-color:' + team.color + ";color:" + badgeColor + '"></span><span class="team-short">' + team.short + '</span><span class="team-name-small">' + team.name + "</span>";
+    (function(tid) { card.onclick = function() { toggleTeam(tid); }; })(team.id);
+    grid.appendChild(card);
+  }
+}
+
+function toggleTeam(id) {
+  var idx = selectedTeams.indexOf(id);
+  if (idx > -1) {
+    selectedTeams.splice(idx, 1);
+  } else if (selectedTeams.length < 4) {
+    selectedTeams.push(id);
+  }
+  updateTeamCards();
+  updateOrderSection();
+  updateLockBtn();
+}
+
+function updateTeamCards() {
+  var el = document.getElementById("pick-count");
+  if (el) el.textContent = "(" + selectedTeams.length + "/4)";
+  var cards = document.querySelectorAll(".team-card");
+  for (var i = 0; i < cards.length; i++) {
+    var card = cards[i];
+    var id = card.getAttribute("data-id");
+    var team = getTeam(id);
+    if (!team) continue;
+    var isSelected = selectedTeams.indexOf(id) > -1;
+    var rank = selectedTeams.indexOf(id) + 1;
+    if (isSelected) card.classList.add("selected"); else card.classList.remove("selected");
+    card.style.borderColor = isSelected ? team.color : "rgba(255,255,255,0.08)";
+    card.style.background = isSelected ? "linear-gradient(135deg, " + team.bg + "CC, " + team.bg + "88)" : "rgba(255,255,255,0.03)";
+    card.style.boxShadow = isSelected ? "0 0 20px " + team.color + "33" : "none";
+    var shortEl = card.querySelector(".team-short");
+    var nameEl = card.querySelector(".team-name-small");
+    if (shortEl) shortEl.style.color = isSelected ? team.color : "#888888";
+    if (nameEl) nameEl.style.color = isSelected ? "#ffffff" : "#666666";
+    var badge = card.querySelector(".rank-badge");
+    if (badge) badge.textContent = rank > 0 ? String(rank) : "";
+  }
+}
+
+function updateOrderSection() {
+  var section = document.getElementById("order-section");
+  var list = document.getElementById("order-list");
+  if (!section || !list) return;
+  if (selectedTeams.length === 4) section.classList.add("show"); else section.classList.remove("show");
+  if (selectedTeams.length !== 4) return;
+  list.innerHTML = "";
+  for (var i = 0; i < selectedTeams.length; i++) {
+    var team = getTeam(selectedTeams[i]);
+    if (!team) continue;
+    var item = document.createElement("div");
+    item.className = "order-item";
+    item.style.borderLeftColor = team.color;
+    var upDis = i === 0 ? " disabled" : "";
+    var downDis = i === 3 ? " disabled" : "";
+    item.innerHTML = '<span class="order-rank">#' + (i + 1) + '</span><span class="order-team-name">' + team.short + " - " + team.name + '</span><div class="order-btns"><button class="order-btn" onclick="moveTeam(' + i + ',-1)"' + upDis + '>&#9650;</button><button class="order-btn" onclick="moveTeam(' + i + ',1)"' + downDis + '>&#9660;</button></div>';
+    list.appendChild(item);
+  }
+}
+
+function moveTeam(idx, dir) {
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= selectedTeams.length) return;
+  var tmp = selectedTeams[idx];
+  selectedTeams[idx] = selectedTeams[newIdx];
+  selectedTeams[newIdx] = tmp;
+  updateTeamCards();
+  updateOrderSection();
+}
+
+function updateLockBtn() {
+  var name = document.getElementById("name-input").value.trim();
+  var btn = document.getElementById("lock-btn");
+  if (!btn) return;
+  var ready = name.length > 0 && selectedTeams.length === 4;
+  if (ready) btn.classList.add("ready"); else btn.classList.remove("ready");
+  var existing = null;
+  for (var i = 0; i < allPredictions.length; i++) {
+    if (allPredictions[i].name.toLowerCase() === name.toLowerCase()) { existing = allPredictions[i]; break; }
+  }
+  var warning = document.getElementById("overwrite-warning");
+  if (warning) {
+    if (existing && name.length > 0) {
+      warning.style.display = "block";
+      warning.textContent = existing.name + " already has a prediction. Submitting will overwrite it.";
+    } else {
+      warning.style.display = "none";
+    }
+  }
+}
+
+function savePrediction() {
+  var name = document.getElementById("name-input").value.trim();
+  if (!name || selectedTeams.length !== 4) return;
+  var btn = document.getElementById("lock-btn");
+  if (btn) { btn.classList.remove("ready"); btn.textContent = "LOCKING IN..."; }
+  var key = name.toLowerCase().replace(/[^a-z0-9]/g, "_");
+  db.ref("predictions/" + key).set({
+    name: name,
+    teams: selectedTeams.slice(),
+    lockedAt: new Date().toISOString()
+  }).then(function() {
+    if (btn) btn.textContent = "LOCK IN PREDICTION";
+    switchScreen("leaderboard");
+  }).catch(function(err) {
+    alert("Failed to save: " + err.message);
+    if (btn) { btn.classList.add("ready"); btn.textContent = "LOCK IN PREDICTION"; }
+  });
+}
+
+function calcScore(pred) {
+  if (!actualResults || actualResults.length < 4) return null;
+  var score = 0;
+  for (var i = 0; i < pred.teams.length; i++) {
+    if (actualResults.indexOf(pred.teams[i]) > -1) score += 10;
+    if (actualResults[i] === pred.teams[i]) score += 5;
+  }
+  return score;
+}
+
+function renderLeaderboard() {
+  var content = document.getElementById("lb-content");
+  var resultsBar = document.getElementById("results-bar");
+  var legend = document.getElementById("legend");
+  if (!content) return;
+  var hasResults = actualResults && actualResults.length >= 4;
+
+  if (hasResults) {
+    if (resultsBar) resultsBar.classList.add("show");
+    if (legend) legend.style.display = "flex";
+    var teamsDiv = document.getElementById("results-teams");
+    if (teamsDiv) {
+      teamsDiv.innerHTML = "";
+      for (var i = 0; i < actualResults.length; i++) {
+        var team = getTeam(actualResults[i]);
+        if (!team) continue;
+        var chip = document.createElement("span");
+        chip.className = "result-chip";
+        chip.style.backgroundColor = team.color;
+        chip.style.color = team.dt ? "#1C1C5E" : "#ffffff";
+        chip.textContent = "#" + (i + 1) + " " + team.short;
+        teamsDiv.appendChild(chip);
+      }
+    }
+    var ab = document.getElementById("admin-toggle");
+    if (ab) ab.textContent = "Edit Results";
+  } else {
+    if (resultsBar) resultsBar.classList.remove("show");
+    if (legend) legend.style.display = "none";
+    var ab2 = document.getElementById("admin-toggle");
+    if (ab2) ab2.textContent = "Set Actual Results (Admin)";
+  }
+
+  if (allPredictions.length === 0) {
+    content.innerHTML = '<div class="empty-state"><p class="empty-text">No predictions yet. Be the first!</p><button class="cta-btn" onclick="switchScreen(\'predict\')">MAKE YOUR PICK</button></div>';
+    return;
+  }
+
+  var sorted = allPredictions.slice().sort(function(a, b) {
+    var sa = calcScore(a); var sb = calcScore(b);
+    if (sa !== null && sb !== null) return sb - sa;
+    return new Date(a.lockedAt) - new Date(b.lockedAt);
+  });
+
+  var html = '<div class="lb-list">';
+  for (var i = 0; i < sorted.length; i++) {
+    var pred = sorted[i];
+    var score = calcScore(pred);
+    var d = new Date(pred.lockedAt);
+    var dateStr = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    var chipsHtml = "";
+    for (var j = 0; j < pred.teams.length; j++) {
+      var t = getTeam(pred.teams[j]);
+      if (!t) continue;
+      if (hasResults) {
+        var cTeam = actualResults.indexOf(pred.teams[j]) > -1;
+        var cPos = actualResults[j] === pred.teams[j];
+        var bg = cPos ? "#22c55e" : cTeam ? "#eab308" : "#dc2626";
+        chipsHtml += '<span class="lb-chip" style="background-color:' + bg + ';color:#ffffff">' + t.short + '</span>';
+      } else {
+        chipsHtml += '<span class="lb-chip" style="background-color:' + t.color + '33;color:' + t.color + ';border:1px solid ' + t.color + '55">' + t.short + '</span>';
+      }
+    }
+    var scoreHtml = score !== null ? '<div class="lb-score"><span class="score-num">' + score + '</span><span class="score-suffix">pts</span></div>' : "";
+    html += '<div class="lb-row"><div class="lb-left"><span class="lb-rank">' + (i + 1) + '</span><div><p class="lb-name">' + pred.name + '</p><p class="lb-time">Locked ' + dateStr + '</p></div></div><div class="lb-teams">' + chipsHtml + '</div>' + scoreHtml + '</div>';
+  }
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function toggleAdmin() {
+  var panel = document.getElementById("admin-panel");
+  if (!panel) return;
+  if (panel.classList.contains("show")) { panel.classList.remove("show"); return; }
+  tempResults = actualResults && actualResults.length >= 4 ? actualResults.slice() : [];
+  panel.classList.add("show");
+  renderAdminGrid();
+}
+
+function renderAdminGrid() {
+  var grid = document.getElementById("admin-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (var i = 0; i < TEAMS.length; i++) {
+    var team = TEAMS[i];
+    var btn = document.createElement("button");
+    btn.className = "admin-team-btn";
+    var isSel = tempResults.indexOf(team.id) > -1;
+    var rank = tempResults.indexOf(team.id) + 1;
+    btn.style.backgroundColor = isSel ? team.color : "transparent";
+    btn.style.color = isSel ? (team.dt ? "#1C1C5E" : "#ffffff") : "#999999";
+    btn.style.borderColor = isSel ? team.color : "#333333";
+    btn.innerHTML = isSel ? "<strong>" + rank + ".</strong> " + team.short : team.short;
+    (function(tid) {
+      btn.onclick = function() {
+        var idx = tempResults.indexOf(tid);
+        if (idx > -1) tempResults.splice(idx, 1);
+        else if (tempResults.length < 4) tempResults.push(tid);
+        renderAdminGrid();
+      };
+    })(team.id);
+    grid.appendChild(btn);
+  }
+  var sb = document.getElementById("admin-save");
+  if (sb) sb.disabled = tempResults.length !== 4;
+}
+
+function saveResults() {
+  if (tempResults.length !== 4) return;
+  db.ref("results").set(tempResults).then(function() {
+    var panel = document.getElementById("admin-panel");
+    if (panel) panel.classList.remove("show");
+  }).catch(function() { alert("Failed to save results."); });
+}
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.database();
+  renderTeamsGrid();
+  loadData();
+  var nameInput = document.getElementById("name-input");
+  if (nameInput) nameInput.addEventListener("input", updateLockBtn);
+} catch (e) {
+  console.error("Firebase init error:", e);
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-family:sans-serif"><h2>Firebase Error</h2><p>' + e.message + '</p></div>';
+}
+</script>
+
 </body>
 </html>
-<style>
-.cta-btn {
-    font-weight: 800;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.nav-btn {
-    transition: all 0.2s;
-}
-.lock-btn {
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    cursor: pointer;
-    opacity: 0.4;
-    transition: all 0.2s;
-}
-.team-card {
-    transition: all 0.2s;
-    background: var(--surface);
-}
-.rank-badge {
-    font-weight: 900;
-}
-.warning-box {
-    display: none;
-}
-.lb-row {
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.error-box {
-    position: relative;
-    z-index: 1;
-    display: none;
-}
-.admin-team-btn {
-    transition: all 0.2s;
-}
-</style>
