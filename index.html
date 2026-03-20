@@ -116,6 +116,26 @@ body {
   margin: 12px auto 0; border-radius: 2px;
 }
 
+/* Hero with player backdrop */
+.hero {
+  position: relative; overflow: hidden;
+}
+.hero-players {
+  position: absolute; inset: 0;
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0.15; pointer-events: none; z-index: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+.hero-players img {
+  flex: 1 1 0; min-width: 0; max-height: 140px;
+  object-fit: contain; object-position: top;
+  margin: 0 -4px;
+}
+.hero > header, .hero > nav {
+  position: relative; z-index: 1;
+}
+
 /* Navigation */
 nav {
   display: flex; gap: 4px; justify-content: center;
@@ -651,18 +671,20 @@ nav {
 </div>
 
 <div class="container" id="app">
-  <header class="header">
-    <img class="ipl-logo" src="https://documents.iplt20.com//ipl/assets/images/ipl-logo-new-old.png" alt="IPL Logo" onerror="this.style.display='none'">
-    <h1 class="title">IPL PLAYOFF PREDICTOR</h1>
-    <p class="subtitle">2026 SEASON</p>
-    <div class="header-rule" aria-hidden="true"></div>
-  </header>
-
-  <nav aria-label="Main navigation">
-    <button class="nav-btn active" data-screen="home" onclick="switchScreen('home')">HOME</button>
-    <button class="nav-btn" data-screen="predict" onclick="switchScreen('predict')">PREDICT</button>
-    <button class="nav-btn" data-screen="leaderboard" onclick="switchScreen('leaderboard')">BOARD</button>
-  </nav>
+  <div class="hero">
+    <div class="hero-players" id="hero-players"></div>
+    <header class="header">
+      <img class="ipl-logo" src="https://documents.iplt20.com//ipl/assets/images/ipl-logo-new-old.png" alt="IPL Logo" onerror="this.style.display='none'">
+      <h1 class="title">IPL PLAYOFF PREDICTOR</h1>
+      <p class="subtitle">2026 SEASON</p>
+      <div class="header-rule" aria-hidden="true"></div>
+    </header>
+    <nav aria-label="Main navigation">
+      <button class="nav-btn active" data-screen="home" onclick="switchScreen('home')">HOME</button>
+      <button class="nav-btn" data-screen="predict" onclick="switchScreen('predict')">PREDICT</button>
+      <button class="nav-btn" data-screen="leaderboard" onclick="switchScreen('leaderboard')">BOARD</button>
+    </nav>
+  </div>
 
   <!-- HOME -->
   <section class="screen active" id="screen-home" aria-label="Home">
@@ -761,16 +783,16 @@ nav {
 
   /* ── Teams ── */
   var TEAMS = [
-    { id: "csk", name: "Chennai Super Kings", short: "CSK", color: "#FFCB05", bg: "#FFCB05", dt: true, logo: "https://documents.iplt20.com/ipl/CSK/logos/Logooutline/CSKoutline.png" },
-    { id: "mi",  name: "Mumbai Indians", short: "MI",  color: "#004BA0", bg: "#004BA0", dt: false, logo: "https://documents.iplt20.com/ipl/MI/Logos/Logooutline/MIoutline.png" },
-    { id: "rcb", name: "Royal Challengers Bengaluru", short: "RCB", color: "#EC1C24", bg: "#2B2B2B", dt: false, logo: "https://documents.iplt20.com/ipl/RCB/Logos/Logooutline/RCBoutline.png" },
-    { id: "kkr", name: "Kolkata Knight Riders", short: "KKR", color: "#3A225D", bg: "#3A225D", dt: false, logo: "https://documents.iplt20.com/ipl/KKR/Logos/Logooutline/KKRoutline.png" },
-    { id: "srh", name: "Sunrisers Hyderabad", short: "SRH", color: "#F7A721", bg: "#E04F16", dt: false, logo: "https://documents.iplt20.com/ipl/SRH/Logos/Logooutline/SRHoutline.png" },
-    { id: "rr",  name: "Rajasthan Royals", short: "RR",  color: "#EA1A85", bg: "#254AA5", dt: false, logo: "https://documents.iplt20.com/ipl/RR/Logos/Logooutline/RRoutline.png" },
-    { id: "dc",  name: "Delhi Capitals", short: "DC",  color: "#17479E", bg: "#17479E", dt: false, logo: "https://documents.iplt20.com/ipl/DC/Logos/LogoOutline/DCoutline.png" },
-    { id: "pbks",name: "Punjab Kings", short: "PBKS", color: "#ED1B24", bg: "#A71930", dt: false, logo: "https://documents.iplt20.com/ipl/PBKS/Logos/Logooutline/PBKSoutline.png" },
-    { id: "gt",  name: "Gujarat Titans", short: "GT",  color: "#1B2133", bg: "#1B2133", dt: false, logo: "https://documents.iplt20.com/ipl/GT/Logos/Logooutline/GToutline.png" },
-    { id: "lsg", name: "Lucknow Super Giants", short: "LSG", color: "#A72056", bg: "#29487D", dt: false, logo: "https://documents.iplt20.com/ipl/LSG/Logos/Logooutline/LSGoutline.png" }
+    { id: "csk", name: "Chennai Super Kings", short: "CSK", color: "#FFCB05", bg: "#FFCB05", dt: true, logo: "https://documents.iplt20.com/ipl/CSK/logos/Logooutline/CSKoutline.png", player: "MS Dhoni", icon: "https://scores.iplt20.com/ipl/playerimages/MS+Dhoni.png" },
+    { id: "mi",  name: "Mumbai Indians", short: "MI",  color: "#004BA0", bg: "#004BA0", dt: false, logo: "https://documents.iplt20.com/ipl/MI/Logos/Logooutline/MIoutline.png", player: "Rohit Sharma", icon: "https://scores.iplt20.com/ipl/playerimages/Rohit+Sharma.png" },
+    { id: "rcb", name: "Royal Challengers Bengaluru", short: "RCB", color: "#EC1C24", bg: "#2B2B2B", dt: false, logo: "https://documents.iplt20.com/ipl/RCB/Logos/Logooutline/RCBoutline.png", player: "Virat Kohli", icon: "https://scores.iplt20.com/ipl/playerimages/Virat+Kohli.png" },
+    { id: "kkr", name: "Kolkata Knight Riders", short: "KKR", color: "#3A225D", bg: "#3A225D", dt: false, logo: "https://documents.iplt20.com/ipl/KKR/Logos/Logooutline/KKRoutline.png", player: "Ajinkya Rahane", icon: "https://scores.iplt20.com/ipl/playerimages/Ajinkya+Rahane.png" },
+    { id: "srh", name: "Sunrisers Hyderabad", short: "SRH", color: "#F7A721", bg: "#E04F16", dt: false, logo: "https://documents.iplt20.com/ipl/SRH/Logos/Logooutline/SRHoutline.png", player: "Abhishek Sharma", icon: "https://scores.iplt20.com/ipl/playerimages/Abhishek+Sharma.png" },
+    { id: "rr",  name: "Rajasthan Royals", short: "RR",  color: "#EA1A85", bg: "#254AA5", dt: false, logo: "https://documents.iplt20.com/ipl/RR/Logos/Logooutline/RRoutline.png", player: "Ravindra Jadeja", icon: "https://scores.iplt20.com/ipl/playerimages/Ravindra+Jadeja.png" },
+    { id: "dc",  name: "Delhi Capitals", short: "DC",  color: "#17479E", bg: "#17479E", dt: false, logo: "https://documents.iplt20.com/ipl/DC/Logos/LogoOutline/DCoutline.png", player: "KL Rahul", icon: "https://scores.iplt20.com/ipl/playerimages/KL+Rahul.png" },
+    { id: "pbks",name: "Punjab Kings", short: "PBKS", color: "#ED1B24", bg: "#A71930", dt: false, logo: "https://documents.iplt20.com/ipl/PBKS/Logos/Logooutline/PBKSoutline.png", player: "Shreyas Iyer", icon: "https://scores.iplt20.com/ipl/playerimages/Shreyas+Iyer.png" },
+    { id: "gt",  name: "Gujarat Titans", short: "GT",  color: "#1B2133", bg: "#1B2133", dt: false, logo: "https://documents.iplt20.com/ipl/GT/Logos/Logooutline/GToutline.png", player: "Shubman Gill", icon: "https://scores.iplt20.com/ipl/playerimages/Shubman+Gill.png" },
+    { id: "lsg", name: "Lucknow Super Giants", short: "LSG", color: "#A72056", bg: "#29487D", dt: false, logo: "https://documents.iplt20.com/ipl/LSG/Logos/Logooutline/LSGoutline.png", player: "Rishabh Pant", icon: "https://scores.iplt20.com/ipl/playerimages/Rishabh+Pant.png" }
   ];
 
   /* ── State ── */
@@ -846,6 +868,20 @@ nav {
       if (!conn) return;
       conn.classList.toggle("show", snap.val() !== true);
     });
+  }
+
+  /* ── Hero Player Backdrop ── */
+  function renderHeroPlayers() {
+    var container = document.getElementById("hero-players");
+    if (!container) return;
+    container.innerHTML = "";
+    for (var i = 0; i < TEAMS.length; i++) {
+      var img = document.createElement("img");
+      img.src = TEAMS[i].icon;
+      img.alt = TEAMS[i].player;
+      img.onerror = function() { this.style.display = "none"; };
+      container.appendChild(img);
+    }
   }
 
   /* ── Team Grid ── */
@@ -1397,6 +1433,7 @@ nav {
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
+    renderHeroPlayers();
     renderTeamsGrid();
     loadData();
     watchConnection();
