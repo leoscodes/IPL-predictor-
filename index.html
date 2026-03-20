@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0f" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>IPL Playoff Predictor 2025</title>
+<title>IPL Playoff Predictor 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -75,6 +75,26 @@ body {
 .logo-icon {
   font-size: 40px; display: block; margin-bottom: 8px;
   animation: float 3s ease-in-out infinite;
+}
+.ipl-logo {
+  height: 48px; display: block; margin: 0 auto 8px;
+  animation: float 3s ease-in-out infinite;
+  object-fit: contain;
+}
+.team-logo {
+  height: 36px; object-fit: contain; display: block; margin-bottom: 4px;
+}
+.order-logo {
+  height: 24px; object-fit: contain; vertical-align: middle; margin-right: 6px;
+}
+.lb-logo {
+  height: 18px; object-fit: contain; vertical-align: middle;
+}
+.modal-logo {
+  height: 24px; object-fit: contain; vertical-align: middle; margin-right: 4px;
+}
+.result-logo {
+  height: 16px; object-fit: contain; vertical-align: middle; margin-right: 2px;
 }
 @keyframes float {
   0%,100% { transform: translateY(0); }
@@ -315,7 +335,7 @@ nav {
   font-size: 14px; font-weight: 900; color: var(--gold);
   font-variant-numeric: tabular-nums; min-width: 28px;
 }
-.order-team-name { flex: 1; font-size: 14px; color: #dddddd; }
+.order-team-name { flex: 1; font-size: 14px; color: #dddddd; display: flex; align-items: center; }
 .order-btns { display: flex; gap: 4px; }
 .order-btn {
   background: rgba(255,255,255,0.1); border: none;
@@ -429,6 +449,7 @@ nav {
 .result-chip {
   padding: 4px 10px; border-radius: var(--radius-xs);
   font-size: 12px; font-weight: 800;
+  display: inline-flex; align-items: center; gap: 3px;
 }
 
 .empty-state { text-align: center; padding: 40px 20px; }
@@ -631,9 +652,9 @@ nav {
 
 <div class="container" id="app">
   <header class="header">
-    <span class="logo-icon" aria-hidden="true">&#127951;</span>
+    <img class="ipl-logo" src="https://documents.iplt20.com//ipl/assets/images/ipl-logo-new-old.png" alt="IPL Logo" onerror="this.style.display='none'">
     <h1 class="title">IPL PLAYOFF PREDICTOR</h1>
-    <p class="subtitle">2025 SEASON</p>
+    <p class="subtitle">2026 SEASON</p>
     <div class="header-rule" aria-hidden="true"></div>
   </header>
 
@@ -736,20 +757,20 @@ nav {
   };
 
   /* ── Admin PIN (change this!) ── */
-  var ADMIN_PIN = "2025";
+  var ADMIN_PIN = "2026";
 
   /* ── Teams ── */
   var TEAMS = [
-    { id: "csk", name: "Chennai Super Kings", short: "CSK", color: "#FFCB05", bg: "#FFCB05", dt: true },
-    { id: "mi",  name: "Mumbai Indians", short: "MI",  color: "#004BA0", bg: "#004BA0", dt: false },
-    { id: "rcb", name: "Royal Challengers Bengaluru", short: "RCB", color: "#EC1C24", bg: "#2B2B2B", dt: false },
-    { id: "kkr", name: "Kolkata Knight Riders", short: "KKR", color: "#3A225D", bg: "#3A225D", dt: false },
-    { id: "srh", name: "Sunrisers Hyderabad", short: "SRH", color: "#F7A721", bg: "#E04F16", dt: false },
-    { id: "rr",  name: "Rajasthan Royals", short: "RR",  color: "#EA1A85", bg: "#254AA5", dt: false },
-    { id: "dc",  name: "Delhi Capitals", short: "DC",  color: "#17479E", bg: "#17479E", dt: false },
-    { id: "pbks",name: "Punjab Kings", short: "PBKS", color: "#ED1B24", bg: "#A71930", dt: false },
-    { id: "gt",  name: "Gujarat Titans", short: "GT",  color: "#1B2133", bg: "#1B2133", dt: false },
-    { id: "lsg", name: "Lucknow Super Giants", short: "LSG", color: "#A72056", bg: "#29487D", dt: false }
+    { id: "csk", name: "Chennai Super Kings", short: "CSK", color: "#FFCB05", bg: "#FFCB05", dt: true, logo: "https://documents.iplt20.com/ipl/CSK/logos/Logooutline/CSKoutline.png" },
+    { id: "mi",  name: "Mumbai Indians", short: "MI",  color: "#004BA0", bg: "#004BA0", dt: false, logo: "https://documents.iplt20.com/ipl/MI/Logos/Logooutline/MIoutline.png" },
+    { id: "rcb", name: "Royal Challengers Bengaluru", short: "RCB", color: "#EC1C24", bg: "#2B2B2B", dt: false, logo: "https://documents.iplt20.com/ipl/RCB/Logos/Logooutline/RCBoutline.png" },
+    { id: "kkr", name: "Kolkata Knight Riders", short: "KKR", color: "#3A225D", bg: "#3A225D", dt: false, logo: "https://documents.iplt20.com/ipl/KKR/Logos/Logooutline/KKRoutline.png" },
+    { id: "srh", name: "Sunrisers Hyderabad", short: "SRH", color: "#F7A721", bg: "#E04F16", dt: false, logo: "https://documents.iplt20.com/ipl/SRH/Logos/Logooutline/SRHoutline.png" },
+    { id: "rr",  name: "Rajasthan Royals", short: "RR",  color: "#EA1A85", bg: "#254AA5", dt: false, logo: "https://documents.iplt20.com/ipl/RR/Logos/Logooutline/RRoutline.png" },
+    { id: "dc",  name: "Delhi Capitals", short: "DC",  color: "#17479E", bg: "#17479E", dt: false, logo: "https://documents.iplt20.com/ipl/DC/Logos/LogoOutline/DCoutline.png" },
+    { id: "pbks",name: "Punjab Kings", short: "PBKS", color: "#ED1B24", bg: "#A71930", dt: false, logo: "https://documents.iplt20.com/ipl/PBKS/Logos/Logooutline/PBKSoutline.png" },
+    { id: "gt",  name: "Gujarat Titans", short: "GT",  color: "#1B2133", bg: "#1B2133", dt: false, logo: "https://documents.iplt20.com/ipl/GT/Logos/Logooutline/GToutline.png" },
+    { id: "lsg", name: "Lucknow Super Giants", short: "LSG", color: "#A72056", bg: "#29487D", dt: false, logo: "https://documents.iplt20.com/ipl/LSG/Logos/Logooutline/LSGoutline.png" }
   ];
 
   /* ── State ── */
@@ -848,6 +869,12 @@ nav {
       badge.style.backgroundColor = team.color;
       badge.style.color = badgeColor;
 
+      var logo = document.createElement("img");
+      logo.className = "team-logo";
+      logo.src = team.logo;
+      logo.alt = team.short;
+      logo.onerror = function() { this.style.display = "none"; };
+
       var short = document.createElement("span");
       short.className = "team-short";
       short.textContent = team.short;
@@ -857,6 +884,7 @@ nav {
       nameEl.textContent = team.name;
 
       card.appendChild(badge);
+      card.appendChild(logo);
       card.appendChild(short);
       card.appendChild(nameEl);
 
@@ -949,7 +977,13 @@ nav {
 
       var nameSpan = document.createElement("span");
       nameSpan.className = "order-team-name";
-      nameSpan.textContent = team.short + " — " + team.name;
+      var orderLogo = document.createElement("img");
+      orderLogo.className = "order-logo";
+      orderLogo.src = team.logo;
+      orderLogo.alt = team.short;
+      orderLogo.onerror = function() { this.style.display = "none"; };
+      nameSpan.appendChild(orderLogo);
+      nameSpan.appendChild(document.createTextNode(team.short + " — " + team.name));
 
       var btnsDiv = document.createElement("div");
       btnsDiv.className = "order-btns";
@@ -1040,11 +1074,18 @@ nav {
         rank.className = "modal-pick-rank";
         rank.textContent = "#" + (i + 1);
 
+        var modalLogo = document.createElement("img");
+        modalLogo.className = "modal-logo";
+        modalLogo.src = team.logo;
+        modalLogo.alt = team.short;
+        modalLogo.onerror = function() { this.style.display = "none"; };
+
         var nameEl = document.createElement("span");
         nameEl.textContent = team.short + " — " + team.name;
         nameEl.style.color = "#eeeeee";
 
         row.appendChild(rank);
+        row.appendChild(modalLogo);
         row.appendChild(nameEl);
         picks.appendChild(row);
       }
@@ -1122,7 +1163,13 @@ nav {
           chip.className = "result-chip";
           chip.style.backgroundColor = rt.color;
           chip.style.color = rt.dt ? "#1C1C5E" : "#ffffff";
-          chip.textContent = "#" + (r + 1) + " " + rt.short;
+          var rLogo = document.createElement("img");
+          rLogo.className = "result-logo";
+          rLogo.src = rt.logo;
+          rLogo.alt = rt.short;
+          rLogo.onerror = function() { this.style.display = "none"; };
+          chip.appendChild(rLogo);
+          chip.appendChild(document.createTextNode("#" + (r + 1) + " " + rt.short));
           teamsDiv.appendChild(chip);
         }
       }
@@ -1217,27 +1264,36 @@ nav {
         if (!t) continue;
         var lbChip = document.createElement("span");
         lbChip.className = "lb-chip";
+        var lbLogo = document.createElement("img");
+        lbLogo.className = "lb-logo";
+        lbLogo.src = t.logo;
+        lbLogo.alt = t.short;
+        lbLogo.onerror = function() { this.style.display = "none"; };
         if (hasResults) {
           var cTeam = actualResults.indexOf(pred.teams[j]) > -1;
           var cPos = actualResults[j] === pred.teams[j];
           if (cPos) {
             lbChip.style.backgroundColor = "#22c55e";
             lbChip.style.color = "#ffffff";
-            lbChip.textContent = "\u2713 " + t.short;
+            lbChip.appendChild(lbLogo);
+            lbChip.appendChild(document.createTextNode("\u2713 " + t.short));
           } else if (cTeam) {
             lbChip.style.backgroundColor = "#eab308";
             lbChip.style.color = "#ffffff";
-            lbChip.textContent = "~ " + t.short;
+            lbChip.appendChild(lbLogo);
+            lbChip.appendChild(document.createTextNode("~ " + t.short));
           } else {
             lbChip.style.backgroundColor = "#dc2626";
             lbChip.style.color = "#ffffff";
-            lbChip.textContent = "\u2717 " + t.short;
+            lbChip.appendChild(lbLogo);
+            lbChip.appendChild(document.createTextNode("\u2717 " + t.short));
           }
         } else {
           lbChip.style.backgroundColor = t.color + "33";
           lbChip.style.color = t.color;
           lbChip.style.border = "1px solid " + t.color + "55";
-          lbChip.textContent = t.short;
+          lbChip.appendChild(lbLogo);
+          lbChip.appendChild(document.createTextNode(t.short));
         }
         teamsRow.appendChild(lbChip);
       }
@@ -1319,9 +1375,9 @@ nav {
   /* ── Share ── */
   function shareApp() {
     var url = window.location.href;
-    var text = "Predict the IPL 2025 Playoff Top 4! Lock in your picks:";
+    var text = "Predict the IPL 2026 Playoff Top 4! Lock in your picks:";
     if (navigator.share) {
-      navigator.share({ title: "IPL Playoff Predictor 2025", text: text, url: url }).catch(function() {});
+      navigator.share({ title: "IPL Playoff Predictor 2026", text: text, url: url }).catch(function() {});
     } else {
       navigator.clipboard.writeText(url).then(function() {
         var btn = document.getElementById("share-btn");
