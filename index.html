@@ -6,12 +6,13 @@
 <meta name="theme-color" content="#0a0a0f" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>IPL Playoff Predictor 2026</title>
+<title>IPL Predictor 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -193,6 +194,49 @@ nav {
 .pts { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; margin-right: 6px; }
 .scoring-note { margin-top: 10px; font-size: 12px; color: #777777; font-style: italic; }
 
+/* Prize Banner */
+.prize-banner {
+  margin-top: 20px; padding: 20px;
+  background: linear-gradient(135deg, rgba(255,203,5,0.08), rgba(234,26,133,0.06));
+  border: 1px solid rgba(255,203,5,0.2);
+  border-radius: 16px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.prize-banner::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255,203,5,0.1), transparent 60%);
+  pointer-events: none;
+}
+.prize-icon { font-size: 36px; display: block; margin-bottom: 8px; }
+.prize-title { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--gold); margin-bottom: 6px; }
+.prize-desc { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.4; }
+.prize-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.lb-prize-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 800; color: var(--gold);
+  background: rgba(255,203,5,0.1); border: 1px solid rgba(255,203,5,0.2);
+  padding: 2px 8px; border-radius: 4px; margin-left: 6px;
+}
+
+/* Rules Screen */
+.rules-section { margin-top: 20px; }
+.rules-section:first-child { margin-top: 0; }
+.rules-heading {
+  font-size: 11px; font-weight: 800; letter-spacing: 2px;
+  color: var(--gold); margin-bottom: 10px;
+}
+.rules-list { display: flex; flex-direction: column; gap: 12px; }
+.rule-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.rule-icon { font-size: 20px; flex-shrink: 0; min-width: 28px; text-align: center; }
+.rule-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.rule-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
 /* Buttons */
 .cta-btn {
   display: block; width: 100%; margin-top: 20px;
@@ -371,6 +415,29 @@ nav {
 .order-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .order-btn:disabled { opacity: 0.2; cursor: default; }
 
+/* Deadline banner */
+.deadline-banner {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700;
+  text-align: center; margin-bottom: 16px;
+  display: none;
+}
+.deadline-banner.open {
+  background: rgba(255,203,5,0.08);
+  border: 1px solid rgba(255,203,5,0.15);
+  color: var(--gold);
+}
+.deadline-banner.locked {
+  background: rgba(220,38,38,0.08);
+  border: 1px solid rgba(220,38,38,0.15);
+  color: var(--red);
+}
+.section-locked {
+  opacity: 0.5; pointer-events: none;
+  position: relative;
+}
+
 /* Lock button */
 .lock-btn {
   display: block; width: 100%; margin-top: 24px;
@@ -459,13 +526,14 @@ nav {
   max-height: 0; overflow: hidden; opacity: 0;
   transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
 }
-.results-bar.show { max-height: 120px; opacity: 1; }
+.results-bar.show { max-height: 200px; opacity: 1; }
 .results-label {
   font-size: 11px; font-weight: 700;
   letter-spacing: 2px; color: var(--green);
   display: block; margin-bottom: 8px;
 }
 .results-teams { display: flex; gap: 6px; flex-wrap: wrap; }
+.results-winner-row { margin-top: 8px; font-size: 12px; color: var(--green); font-weight: 700; }
 .result-chip {
   padding: 4px 10px; border-radius: var(--radius-xs);
   font-size: 12px; font-weight: 800;
@@ -505,6 +573,15 @@ nav {
   font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
   display: inline-flex; align-items: center; gap: 3px;
 }
+.lb-winner-row {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  font-size: 12px; color: var(--text-muted);
+}
+.lb-winner-chip {
+  padding: 3px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 3px;
+}
 .lb-score {
   display: flex; align-items: baseline; gap: 3px;
   min-width: 48px; justify-content: flex-end;
@@ -524,8 +601,32 @@ nav {
   margin-left: 6px; vertical-align: middle;
 }
 
+/* Auth */
+.google-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 28px; background: #fff; border: none;
+  border-radius: var(--radius); color: #333; font-size: 14px;
+  font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.google-btn:active { transform: scale(0.97); }
+.user-bar {
+  display: none; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+.user-bar.show { display: flex; }
+.user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.user-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.logout-btn {
+  background: transparent; border: 1px solid var(--border-light);
+  color: var(--text-dim); padding: 4px 12px; border-radius: var(--radius-xs);
+  font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.lb-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+
 /* Admin */
-.admin-section { margin-top: 24px; text-align: center; }
+.admin-section { margin-top: 24px; text-align: center; display: none; }
 .admin-btn {
   background: transparent;
   border: 1px solid var(--border-light);
@@ -545,20 +646,7 @@ nav {
   max-height: 0; overflow: hidden; opacity: 0;
   transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
 }
-.admin-panel.show { max-height: 600px; opacity: 1; padding: 20px; }
-
-/* Admin PIN */
-.admin-pin-group { margin-bottom: 16px; }
-.admin-pin-input {
-  width: 100%; padding: 10px 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary); font-size: 16px;
-  outline: none; font-family: inherit;
-  letter-spacing: 4px; text-align: center;
-}
-.admin-pin-input:focus { border-color: var(--gold); }
+.admin-panel.show { max-height: 1200px; opacity: 1; padding: 20px; }
 
 .admin-label { font-size: 13px; color: #aaaaaa; margin-bottom: 12px; }
 .admin-grid { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -643,6 +731,76 @@ nav {
   50% { opacity: 1; }
 }
 
+/* Match Predictor */
+.match-list { display: flex; flex-direction: column; gap: 10px; }
+.match-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  transition: all var(--transition);
+}
+.match-card.locked { opacity: 0.6; }
+.match-card.completed { border-color: rgba(34,197,94,0.2); opacity: 1; }
+.match-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.match-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); }
+.match-countdown { font-size: 11px; font-weight: 700; color: var(--gold); }
+.match-countdown.locked { color: var(--red); }
+.match-teams {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 12px;
+}
+.match-team-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; border: 2px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer;
+  background: transparent; transition: all var(--transition);
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit; color: inherit;
+}
+.match-team-btn:disabled { cursor: default; }
+.match-team-btn.selected { border-color: var(--gold); background: rgba(255,203,5,0.08); }
+.match-team-btn.correct { border-color: var(--green); background: rgba(34,197,94,0.08); }
+.match-team-btn.wrong { border-color: var(--red); background: rgba(220,38,38,0.08); opacity: 0.5; }
+.match-team-logo { height: 32px; object-fit: contain; }
+.match-team-name { font-size: 14px; font-weight: 800; color: var(--text-muted); }
+.match-team-btn.selected .match-team-name { color: var(--gold); }
+.match-vs { font-size: 12px; font-weight: 800; color: var(--text-ghost); flex-shrink: 0; }
+.match-margin {
+  display: flex; gap: 10px; align-items: flex-start;
+  max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+.match-margin.show { max-height: 80px; opacity: 1; }
+.margin-input-group { flex: 1; }
+.margin-input-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 4px; }
+.margin-input {
+  width: 100%; padding: 8px 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs); color: var(--text-primary);
+  font-size: 15px; font-family: inherit; outline: none; text-align: center;
+}
+.margin-input:focus { border-color: var(--gold); }
+.margin-input:disabled { opacity: 0.4; }
+.match-result-badge {
+  text-align: center; margin-top: 8px; font-size: 12px; font-weight: 700;
+  padding: 4px 10px; border-radius: var(--radius-xs);
+}
+.match-result-badge.correct { background: rgba(34,197,94,0.1); color: var(--green); }
+.match-result-badge.wrong { background: rgba(220,38,38,0.1); color: var(--red); }
+.match-result-badge.bonus { background: rgba(255,203,5,0.1); color: var(--gold); }
+.match-stats {
+  display: flex; gap: 10px; margin-bottom: 16px; justify-content: center;
+}
+.match-stat {
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border);
+  text-align: center; flex: 1;
+}
+.match-stat-num { font-size: 20px; font-weight: 900; color: var(--gold); }
+.match-stat-label { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; font-weight: 700; }
+
 /* Responsive adjustments */
 @media (max-width: 360px) {
   .title { font-size: 22px; letter-spacing: 2px; }
@@ -650,6 +808,7 @@ nav {
   .team-short { font-size: 18px; }
   .teams-grid { gap: 6px; }
   .team-card { padding: 12px 14px; }
+  .nav-btn { font-size: 9px; letter-spacing: 0.5px; padding: 10px 0; }
 }
 </style>
 </head>
@@ -675,32 +834,45 @@ nav {
     <div class="hero-players" id="hero-players"></div>
     <header class="header">
       <img class="ipl-logo" src="https://documents.iplt20.com//ipl/assets/images/ipl-logo-new-old.png" alt="IPL Logo" onerror="this.style.display='none'">
-      <h1 class="title">IPL PLAYOFF PREDICTOR</h1>
+      <h1 class="title">IPL PREDICTOR</h1>
       <p class="subtitle">2026 SEASON</p>
       <div class="header-rule" aria-hidden="true"></div>
     </header>
     <nav aria-label="Main navigation">
       <button class="nav-btn active" data-screen="home" onclick="switchScreen('home')">HOME</button>
-      <button class="nav-btn" data-screen="predict" onclick="switchScreen('predict')">PREDICT</button>
+      <button class="nav-btn" data-screen="rules" onclick="switchScreen('rules')">RULES</button>
+      <button class="nav-btn" data-screen="predict" onclick="switchScreen('predict')">PLAYOFFS</button>
+      <button class="nav-btn" data-screen="matches" onclick="switchScreen('matches')">MATCHES</button>
       <button class="nav-btn" data-screen="leaderboard" onclick="switchScreen('leaderboard')">BOARD</button>
     </nav>
+  </div>
+
+  <!-- User Bar (shown when signed in) -->
+  <div class="user-bar" id="user-bar">
+    <img class="user-avatar" id="user-avatar" src="" alt="" />
+    <span class="user-name" id="user-name"></span>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
 
   <!-- HOME -->
   <section class="screen active" id="screen-home" aria-label="Home">
     <div class="hero-card">
       <h2 class="hero-title">HOW IT WORKS</h2>
-      <div class="step"><span class="step-num" aria-hidden="true">01</span><span class="step-text">Enter your name</span></div>
+      <div class="step"><span class="step-num" aria-hidden="true">01</span><span class="step-text">Sign in with Google</span></div>
       <div class="step"><span class="step-num" aria-hidden="true">02</span><span class="step-text">Pick 4 playoff teams in order</span></div>
-      <div class="step"><span class="step-num" aria-hidden="true">03</span><span class="step-text">Lock in your prediction</span></div>
-      <div class="step"><span class="step-num" aria-hidden="true">04</span><span class="step-text">Wait for results and settle bragging rights</span></div>
-      <div class="scoring-box">
-        <div class="scoring-title">SCORING</div>
-        <p class="scoring-rule"><span class="pts">+10</span> for each correct playoff team</p>
-        <p class="scoring-rule"><span class="pts">+5</span> bonus for correct finishing position</p>
-        <p class="scoring-note">Max possible: 60 points (all 4 teams in exact order)</p>
+      <div class="step"><span class="step-num" aria-hidden="true">03</span><span class="step-text">Predict the winner & margin of every match</span></div>
+      <div class="step"><span class="step-num" aria-hidden="true">04</span><span class="step-text">Climb the combined leaderboard!</span></div>
+      <p class="scoring-note" style="margin-top:16px">
+        Two games, one leaderboard. Hundreds of points up for grabs.
+        <a href="#" onclick="switchScreen('rules');return false" style="color:var(--gold);text-decoration:underline">See full rules</a>
+      </p>
+      <div class="prize-banner">
+        <span class="prize-icon" aria-hidden="true">&#127942;</span>
+        <p class="prize-title">WINNER'S PRIZE</p>
+        <p class="prize-desc">2026 IPL Predictor Championship T-shirt</p>
+        <p class="prize-sub">Top scorer on the leaderboard takes home the glory</p>
       </div>
-      <button class="cta-btn" onclick="switchScreen('predict')">MAKE YOUR PICK</button>
+      <button class="cta-btn" onclick="switchScreen('matches')">PREDICT MATCHES</button>
     </div>
     <p class="player-count pulse" id="player-count">Loading predictions...</p>
     <div class="share-bar">
@@ -711,20 +883,156 @@ nav {
     </div>
   </section>
 
+  <!-- RULES -->
+  <section class="screen" id="screen-rules" aria-label="Rules">
+    <div class="hero-card">
+      <h2 class="hero-title">RULES & SCORING</h2>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">PLAYOFF PREDICTOR</h3>
+        <div class="scoring-box" style="margin-top:0">
+          <p class="scoring-rule"><span class="pts">+10</span> for each correct playoff team</p>
+          <p class="scoring-rule"><span class="pts">+5</span> bonus for correct finishing position</p>
+          <p class="scoring-note">Maximum: 60 points</p>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">MATCH PREDICTOR — LEAGUE STAGE</h3>
+        <div class="scoring-box" style="margin-top:0">
+          <p class="scoring-rule"><span class="pts">+10</span> for correct match winner</p>
+          <p class="scoring-rule"><span class="pts">+5</span> bonus for correct margin</p>
+          <p class="scoring-note">Max per match: 15 points</p>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">MATCH PREDICTOR — PLAYOFFS (Q1, ELIMINATOR, Q2)</h3>
+        <div class="scoring-box" style="margin-top:0">
+          <p class="scoring-rule"><span class="pts">+20</span> for correct match winner</p>
+          <p class="scoring-rule"><span class="pts">+5</span> bonus for correct margin</p>
+          <p class="scoring-note">Max per match: 25 points</p>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">MATCH PREDICTOR — FINAL</h3>
+        <div class="scoring-box" style="margin-top:0">
+          <p class="scoring-rule"><span class="pts">+40</span> for correct match winner</p>
+          <p class="scoring-rule"><span class="pts">+10</span> bonus for correct margin</p>
+          <p class="scoring-note">Max per match: 50 points</p>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">MARGIN PREDICTION</h3>
+        <div class="rules-list">
+          <div class="rule-item">
+            <span class="rule-icon">&#128202;</span>
+            <div>
+              <p class="rule-desc">For each match, predict <strong>both</strong> a runs margin (0-200) and a wickets margin (0-10). If the winning team batted first, your runs prediction is checked (within +/- 5 = bonus). If the winning team chased, your wickets prediction is checked (exact match = bonus).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">DEADLINES</h3>
+        <div class="rules-list">
+          <div class="rule-item">
+            <span class="rule-icon">&#9201;</span>
+            <div>
+              <p class="rule-title">Playoff Prediction Lock</p>
+              <p class="rule-desc">Your Top 4 prediction locks <strong>30 minutes before Match 1</strong> (Mar 28, 7:00 PM IST). After this, you cannot change your playoff picks.</p>
+            </div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">&#127952;</span>
+            <div>
+              <p class="rule-title">Match Predictions</p>
+              <p class="rule-desc">Each match prediction locks <strong>30 minutes before its start time</strong>. Predictions auto-save as you make them.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">GENERAL RULES</h3>
+        <div class="rules-list">
+          <div class="rule-item">
+            <span class="rule-icon">&#128100;</span>
+            <div><p class="rule-desc">One prediction per Google account. Sign in to play.</p></div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">&#128260;</span>
+            <div><p class="rule-desc">You can change your prediction any time before the relevant deadline.</p></div>
+          </div>
+          <div class="rule-item">
+            <span class="rule-icon">&#128274;</span>
+            <div><p class="rule-desc">Once a deadline passes, that prediction is permanently locked.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <h3 class="rules-heading">PRIZE</h3>
+        <div class="prize-banner" style="margin-top:8px">
+          <span class="prize-icon" aria-hidden="true">&#127942;</span>
+          <p class="prize-desc">2026 IPL Predictor Championship T-shirt</p>
+          <p class="prize-sub">Highest score on the final leaderboard wins. Ties broken by earliest lock-in time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- PREDICT -->
   <section class="screen" id="screen-predict" aria-label="Make your prediction">
-    <div class="input-group">
-      <label class="label" for="name-input">YOUR NAME</label>
-      <input class="text-input" id="name-input" placeholder="Enter your name..." maxlength="20" autocomplete="off" />
+    <!-- Auth prompt (shown when not signed in) -->
+    <div id="auth-prompt" style="display:none;text-align:center;padding:32px 20px">
+      <p style="font-size:15px;color:var(--text-secondary);margin-bottom:20px">
+        Sign in with Google to lock in your prediction
+      </p>
+      <button class="google-btn" onclick="doGoogleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
     </div>
-    <div class="warning-box" id="overwrite-warning" role="alert"></div>
-    <p class="pick-label">PICK YOUR 4 PLAYOFF TEAMS <span class="pick-count" id="pick-count">(0/4)</span></p>
-    <div class="teams-grid" id="teams-grid" role="group" aria-label="Team selection"></div>
-    <div class="order-section" id="order-section" aria-label="Predicted finishing order">
-      <p class="label">DRAG TO REORDER YOUR TOP 4</p>
-      <div class="order-list" id="order-list"></div>
+    <!-- Predict form (shown when signed in) -->
+    <div id="predict-form" style="display:none">
+      <div class="deadline-banner" id="deadline-banner"></div>
+      <div id="playoffs-section">
+        <div class="input-group">
+          <label class="label" for="name-input">YOUR NAME</label>
+          <input class="text-input" id="name-input" placeholder="Enter your name..." maxlength="20" autocomplete="off" />
+        </div>
+        <div class="warning-box" id="overwrite-warning" role="alert"></div>
+        <p class="pick-label">PICK YOUR 4 PLAYOFF TEAMS <span class="pick-count" id="pick-count">(0/4)</span></p>
+        <div class="teams-grid" id="teams-grid" role="group" aria-label="Team selection"></div>
+        <div class="order-section" id="order-section" aria-label="Predicted finishing order">
+          <p class="label">DRAG TO REORDER YOUR TOP 4</p>
+          <div class="order-list" id="order-list"></div>
+        </div>
+      </div>
+      <button class="lock-btn" id="lock-btn" onclick="showConfirmModal()" aria-disabled="true">LOCK IN PLAYOFF PREDICTION</button>
+      <p id="all-locked-msg" style="display:none;text-align:center;padding:16px;color:var(--red);font-weight:700;font-size:14px">All predictions are closed</p>
     </div>
-    <button class="lock-btn" id="lock-btn" onclick="showConfirmModal()" aria-disabled="true">LOCK IN PREDICTION</button>
+  </section>
+
+  <!-- MATCHES -->
+  <section class="screen" id="screen-matches" aria-label="Match Predictions">
+    <div id="match-auth-prompt" style="display:none;text-align:center;padding:32px 20px">
+      <p style="font-size:15px;color:var(--text-secondary);margin-bottom:20px">
+        Sign in with Google to predict match winners
+      </p>
+      <button class="google-btn" onclick="doGoogleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+    </div>
+    <div id="match-form" style="display:none">
+      <div class="match-stats" id="match-stats"></div>
+      <div class="match-list" id="match-list"></div>
+    </div>
   </section>
 
   <!-- LEADERBOARD -->
@@ -738,18 +1046,40 @@ nav {
       <div class="results-teams" id="results-teams"></div>
     </div>
     <div id="lb-content"></div>
-    <div class="admin-section">
+    <div class="admin-section" id="admin-section">
       <button class="admin-btn" id="admin-toggle" onclick="toggleAdmin()">Set Results (Admin)</button>
       <div class="admin-panel" id="admin-panel" aria-label="Admin panel">
-        <div class="admin-pin-group">
-          <label class="label" for="admin-pin">ADMIN PIN</label>
-          <input class="admin-pin-input" id="admin-pin" type="password" placeholder="****" maxlength="8" autocomplete="off" />
-        </div>
         <p class="admin-label">Select the 4 playoff teams in finishing order:</p>
         <div class="admin-grid" id="admin-grid" role="group" aria-label="Admin team selection"></div>
-        <div class="admin-actions">
-          <button class="admin-save" id="admin-save" onclick="saveResults()" disabled>Save Results</button>
-          <button class="admin-cancel" onclick="toggleAdmin()">Cancel</button>
+        <div class="admin-actions" style="margin-bottom:20px">
+          <button class="admin-save" id="admin-save" onclick="saveResults()" disabled>Save Playoff Results</button>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+          <p class="admin-label">Set Match Result:</p>
+          <select id="admin-match-select" class="text-input" onchange="onAdminMatchSelect()">
+            <option value="">Select match...</option>
+          </select>
+          <div id="admin-match-detail" style="display:none;margin-top:12px">
+            <p class="admin-label">Winner:</p>
+            <div class="admin-grid" id="admin-match-teams"></div>
+            <p class="admin-label" style="margin-top:12px">Margin Type:</p>
+            <div class="admin-grid" id="admin-match-margin-type"></div>
+            <p class="admin-label" style="margin-top:12px">Margin Number:</p>
+            <input type="number" id="admin-match-margin-num" class="text-input" min="0" placeholder="e.g. 25" />
+            <div class="admin-actions">
+              <button class="admin-save" onclick="saveMatchResult()">Save Match Result</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px">
+          <p class="label">PLAYOFF LOCK OVERRIDE</p>
+          <input type="datetime-local" id="admin-playoff-deadline" class="text-input" />
+          <div class="admin-actions">
+            <button class="admin-save" style="background-color:var(--blue)" onclick="saveDeadlines()">Save Deadline</button>
+            <button class="admin-cancel" onclick="toggleAdmin()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
@@ -778,8 +1108,8 @@ nav {
     appId: "1:858232401972:web:6512a11c096dfc237b5a61"
   };
 
-  /* ── Admin PIN (change this!) ── */
-  var ADMIN_PIN = "2026";
+  /* ── Admin Email ── */
+  var ADMIN_EMAIL = "lionsaccount@gmail.com";
 
   /* ── Teams ── */
   var TEAMS = [
@@ -795,16 +1125,50 @@ nav {
     { id: "lsg", name: "Lucknow Super Giants", short: "LSG", color: "#A72056", bg: "#29487D", dt: false, logo: "https://documents.iplt20.com/ipl/LSG/Logos/Logooutline/LSGoutline.png", player: "Rishabh Pant", icon: "https://scores.iplt20.com/ipl/playerimages/Rishabh+Pant.png" }
   ];
 
+  /* ── Matches Schedule (Phase 1 — 20 matches) ── */
+  var MATCHES = [
+    { id: 1,  date: "2026-03-28T19:30:00+05:30", home: "rcb",  away: "srh",  venue: "Bengaluru", phase: "league" },
+    { id: 2,  date: "2026-03-29T19:30:00+05:30", home: "mi",   away: "kkr",  venue: "Mumbai", phase: "league" },
+    { id: 3,  date: "2026-03-30T19:30:00+05:30", home: "rr",   away: "csk",  venue: "Guwahati", phase: "league" },
+    { id: 4,  date: "2026-03-31T19:30:00+05:30", home: "pbks", away: "gt",   venue: "New Chandigarh", phase: "league" },
+    { id: 5,  date: "2026-04-01T19:30:00+05:30", home: "lsg",  away: "dc",   venue: "Lucknow", phase: "league" },
+    { id: 6,  date: "2026-04-02T19:30:00+05:30", home: "kkr",  away: "srh",  venue: "Kolkata", phase: "league" },
+    { id: 7,  date: "2026-04-03T19:30:00+05:30", home: "csk",  away: "pbks", venue: "Chennai", phase: "league" },
+    { id: 8,  date: "2026-04-04T15:30:00+05:30", home: "dc",   away: "mi",   venue: "Delhi", phase: "league" },
+    { id: 9,  date: "2026-04-04T19:30:00+05:30", home: "gt",   away: "rr",   venue: "Ahmedabad", phase: "league" },
+    { id: 10, date: "2026-04-05T15:30:00+05:30", home: "srh",  away: "lsg",  venue: "Hyderabad", phase: "league" },
+    { id: 11, date: "2026-04-05T19:30:00+05:30", home: "rcb",  away: "csk",  venue: "Bengaluru", phase: "league" },
+    { id: 12, date: "2026-04-06T19:30:00+05:30", home: "kkr",  away: "pbks", venue: "Kolkata", phase: "league" },
+    { id: 13, date: "2026-04-07T19:30:00+05:30", home: "rr",   away: "mi",   venue: "Guwahati", phase: "league" },
+    { id: 14, date: "2026-04-08T19:30:00+05:30", home: "dc",   away: "gt",   venue: "Delhi", phase: "league" },
+    { id: 15, date: "2026-04-09T19:30:00+05:30", home: "kkr",  away: "lsg",  venue: "Kolkata", phase: "league" },
+    { id: 16, date: "2026-04-10T19:30:00+05:30", home: "rr",   away: "rcb",  venue: "Guwahati", phase: "league" },
+    { id: 17, date: "2026-04-11T15:30:00+05:30", home: "pbks", away: "srh",  venue: "New Chandigarh", phase: "league" },
+    { id: 18, date: "2026-04-11T19:30:00+05:30", home: "csk",  away: "dc",   venue: "Chennai", phase: "league" },
+    { id: 19, date: "2026-04-12T15:30:00+05:30", home: "lsg",  away: "gt",   venue: "Lucknow", phase: "league" },
+    { id: 20, date: "2026-04-12T19:30:00+05:30", home: "mi",   away: "rcb",  venue: "Mumbai", phase: "league" }
+  ];
+
+  var PLAYOFF_DEADLINE = new Date("2026-03-28T19:00:00+05:30");
+
   /* ── State ── */
   var db = null;
+  var auth = null;
+  var currentUser = null;
+  var googleProvider = null;
   var allPredictions = [];
-  var actualResults = [];
+  var actualResults = null;
   var selectedTeams = [];
   var tempResults = [];
   var currentScreen = "home";
   var maxToastTimer = null;
   var debounceTimer = null;
-  var myName = localStorage.getItem("ipl_pred_name") || "";
+  var matchDebounceTimers = {};
+  var playoffDeadline = null;
+  var countdownTimer = null;
+  var matchPredictions = {};
+  var matchResults = {};
+  var allMatchPredictions = {};
 
   /* ── Helpers ── */
   function getTeam(id) {
@@ -814,10 +1178,173 @@ nav {
     return null;
   }
 
+  function getMatchById(id) {
+    var mid = typeof id === "string" ? parseInt(id, 10) : id;
+    for (var i = 0; i < MATCHES.length; i++) {
+      if (MATCHES[i].id === mid) return MATCHES[i];
+    }
+    return null;
+  }
+
+  function getMatchLockTime(match) {
+    return new Date(new Date(match.date).getTime() - 30 * 60 * 1000);
+  }
+
+  function isMatchLocked(match) {
+    return new Date() >= getMatchLockTime(match);
+  }
+
+  function isMatchCompleted(matchId) {
+    return matchResults[matchId] != null;
+  }
+
+  function formatMatchDate(dateStr) {
+    var d = new Date(dateStr);
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + ", " +
+           d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
+  }
+
   function esc(str) {
     var d = document.createElement("div");
     d.textContent = str;
     return d.innerHTML;
+  }
+
+  function getResultsTeams() {
+    if (!actualResults) return [];
+    if (Array.isArray(actualResults)) return actualResults;
+    return actualResults.teams || [];
+  }
+
+  function isAdmin() {
+    return currentUser && currentUser.email === ADMIN_EMAIL;
+  }
+
+  /* ── Deadline Logic ── */
+  function isPlayoffsLocked() {
+    var dl = playoffDeadline || PLAYOFF_DEADLINE;
+    return dl && new Date() >= dl;
+  }
+
+  function timeUntil(date) {
+    var ms = date - new Date();
+    if (ms <= 0) return "now";
+    var d = Math.floor(ms / 86400000);
+    var h = Math.floor((ms % 86400000) / 3600000);
+    var m = Math.floor((ms % 3600000) / 60000);
+    return (d > 0 ? d + "d " : "") + h + "h " + m + "m";
+  }
+
+  function updateDeadlineUI() {
+    var banner = document.getElementById("deadline-banner");
+    if (!banner) return;
+    var lockBtn = document.getElementById("lock-btn");
+    var allLockedMsg = document.getElementById("all-locked-msg");
+    var playoffsSection = document.getElementById("playoffs-section");
+
+    var dl = playoffDeadline || PLAYOFF_DEADLINE;
+    if (!dl) {
+      banner.style.display = "none";
+      if (playoffsSection) playoffsSection.classList.remove("section-locked");
+      if (lockBtn) lockBtn.style.display = "block";
+      if (allLockedMsg) allLockedMsg.style.display = "none";
+      return;
+    }
+    banner.style.display = "block";
+
+    if (isPlayoffsLocked()) {
+      banner.className = "deadline-banner locked";
+      banner.textContent = "Playoff predictions are locked";
+      if (playoffsSection) playoffsSection.classList.add("section-locked");
+      if (lockBtn) lockBtn.style.display = "none";
+      if (allLockedMsg) allLockedMsg.style.display = "block";
+    } else {
+      banner.className = "deadline-banner open";
+      banner.textContent = "Playoff picks lock in " + timeUntil(dl);
+      if (playoffsSection) playoffsSection.classList.remove("section-locked");
+      if (lockBtn) lockBtn.style.display = "block";
+      if (allLockedMsg) allLockedMsg.style.display = "none";
+    }
+  }
+
+  /* ── Auth ── */
+  function doGoogleSignIn() {
+    if (!auth || !googleProvider) return;
+    auth.signInWithPopup(googleProvider).catch(function(err) {
+      if (err.code !== "auth/popup-closed-by-user") {
+        alert("Sign-in failed: " + err.message);
+      }
+    });
+  }
+  window.doGoogleSignIn = doGoogleSignIn;
+
+  function doLogout() {
+    if (auth) auth.signOut();
+  }
+  window.doLogout = doLogout;
+
+  function updateAuthUI() {
+    var userBar = document.getElementById("user-bar");
+    var authPrompt = document.getElementById("auth-prompt");
+    var matchAuthPrompt = document.getElementById("match-auth-prompt");
+    var predictForm = document.getElementById("predict-form");
+    var matchForm = document.getElementById("match-form");
+    var adminSection = document.getElementById("admin-section");
+    var nameInput = document.getElementById("name-input");
+
+    if (currentUser) {
+      if (userBar) {
+        userBar.classList.add("show");
+        var avatar = document.getElementById("user-avatar");
+        var userName = document.getElementById("user-name");
+        if (avatar) avatar.src = currentUser.photoURL || "";
+        if (userName) userName.textContent = currentUser.displayName || currentUser.email;
+      }
+      if (authPrompt) authPrompt.style.display = "none";
+      if (matchAuthPrompt) matchAuthPrompt.style.display = "none";
+      if (predictForm) predictForm.style.display = "block";
+      if (matchForm) matchForm.style.display = "block";
+      if (nameInput && currentUser.displayName && !nameInput.value) {
+        nameInput.value = currentUser.displayName;
+        updateLockBtn();
+      }
+      if (adminSection) {
+        adminSection.style.display = isAdmin() ? "block" : "none";
+      }
+      loadMyPrediction();
+      loadMyMatchPredictions();
+    } else {
+      if (userBar) userBar.classList.remove("show");
+      if (authPrompt) authPrompt.style.display = "block";
+      if (matchAuthPrompt) matchAuthPrompt.style.display = "block";
+      if (predictForm) predictForm.style.display = "none";
+      if (matchForm) matchForm.style.display = "none";
+      if (adminSection) adminSection.style.display = "none";
+    }
+  }
+
+  function loadMyPrediction() {
+    if (!currentUser || !db) return;
+    db.ref("predictions/" + currentUser.uid).once("value", function(snap) {
+      var pred = snap.val();
+      if (!pred) return;
+      var nameInput = document.getElementById("name-input");
+      if (nameInput && pred.name) nameInput.value = pred.name;
+      if (pred.teams && pred.teams.length > 0) {
+        selectedTeams = pred.teams.slice();
+        updateTeamCards();
+        updateOrderSection();
+      }
+      updateLockBtn();
+    });
+  }
+
+  function loadMyMatchPredictions() {
+    if (!currentUser || !db) return;
+    db.ref("match_predictions/" + currentUser.uid).on("value", function(snap) {
+      matchPredictions = snap.val() || {};
+      if (currentScreen === "matches") renderMatchList();
+    });
   }
 
   /* ── Navigation ── */
@@ -835,6 +1362,8 @@ nav {
       btns[i].classList.toggle("active", btns[i].getAttribute("data-screen") === name);
     }
     if (name === "leaderboard") renderLeaderboard();
+    if (name === "predict") updateDeadlineUI();
+    if (name === "matches") renderMatchList();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   window.switchScreen = switchScreen;
@@ -854,7 +1383,23 @@ nav {
       if (currentScreen === "leaderboard") renderLeaderboard();
     });
     db.ref("results").on("value", function(snap) {
-      actualResults = snap.val() || [];
+      actualResults = snap.val() || null;
+      if (currentScreen === "leaderboard") renderLeaderboard();
+    });
+    db.ref("deadlines").on("value", function(snap) {
+      var val = snap.val() || {};
+      playoffDeadline = val.playoffs ? new Date(val.playoffs) : null;
+      updateDeadlineUI();
+      var pdi = document.getElementById("admin-playoff-deadline");
+      if (pdi && val.playoffs) pdi.value = val.playoffs.slice(0, 16);
+    });
+    db.ref("match_predictions").on("value", function(snap) {
+      allMatchPredictions = snap.val() || {};
+      if (currentScreen === "leaderboard") renderLeaderboard();
+    });
+    db.ref("match_results").on("value", function(snap) {
+      matchResults = snap.val() || {};
+      if (currentScreen === "matches") renderMatchList();
       if (currentScreen === "leaderboard") renderLeaderboard();
     });
   }
@@ -996,8 +1541,9 @@ nav {
     var section = document.getElementById("order-section");
     var list = document.getElementById("order-list");
     if (!section || !list) return;
-    section.classList.toggle("show", selectedTeams.length === 4);
-    if (selectedTeams.length !== 4) return;
+    var has4 = selectedTeams.length === 4;
+    section.classList.toggle("show", has4);
+    if (!has4) return;
 
     list.innerHTML = "";
     for (var i = 0; i < selectedTeams.length; i++) {
@@ -1060,40 +1606,270 @@ nav {
     updateOrderSection();
   }
 
-  /* ── Lock Button ── */
+  /* ── Match Predictor ── */
+  function renderMatchList() {
+    var list = document.getElementById("match-list");
+    var stats = document.getElementById("match-stats");
+    if (!list) return;
+
+    // Stats
+    var predicted = 0, correct = 0, totalPts = 0;
+    for (var s = 0; s < MATCHES.length; s++) {
+      var mid = MATCHES[s].id;
+      if (matchPredictions[mid]) predicted++;
+      if (matchResults[mid] && matchPredictions[mid]) {
+        var sc = calcMatchScore(mid, matchPredictions[mid]);
+        totalPts += sc;
+        if (matchPredictions[mid].winner === matchResults[mid].winner) correct++;
+      }
+    }
+    if (stats) {
+      stats.innerHTML =
+        '<div class="match-stat"><div class="match-stat-num">' + predicted + '/' + MATCHES.length + '</div><div class="match-stat-label">PREDICTED</div></div>' +
+        '<div class="match-stat"><div class="match-stat-num">' + correct + '</div><div class="match-stat-label">CORRECT</div></div>' +
+        '<div class="match-stat"><div class="match-stat-num">' + totalPts + '</div><div class="match-stat-label">POINTS</div></div>';
+    }
+
+    list.innerHTML = "";
+    for (var i = 0; i < MATCHES.length; i++) {
+      var match = MATCHES[i];
+      var pred = matchPredictions[match.id] || {};
+      var result = matchResults[match.id];
+      var locked = isMatchLocked(match);
+      var completed = result != null;
+
+      var card = document.createElement("div");
+      card.className = "match-card";
+      if (locked && !completed) card.classList.add("locked");
+      if (completed) card.classList.add("completed");
+
+      var homeTeam = getTeam(match.home);
+      var awayTeam = getTeam(match.away);
+      if (!homeTeam || !awayTeam) continue;
+
+      // Header
+      var header = document.createElement("div");
+      header.className = "match-header";
+      var label = document.createElement("span");
+      label.className = "match-label";
+      label.textContent = "MATCH " + match.id + " \u00B7 " + formatMatchDate(match.date);
+      var countdown = document.createElement("span");
+      countdown.className = "match-countdown";
+      if (completed) {
+        countdown.textContent = "COMPLETED";
+        countdown.style.color = "var(--green)";
+      } else if (locked) {
+        countdown.textContent = "LOCKED";
+        countdown.classList.add("locked");
+      } else {
+        countdown.textContent = "\u23F1 " + timeUntil(getMatchLockTime(match));
+      }
+      header.appendChild(label);
+      header.appendChild(countdown);
+
+      // Venue
+      var venue = document.createElement("div");
+      venue.style.cssText = "font-size:11px;color:var(--text-dim);margin-bottom:10px";
+      venue.textContent = match.venue;
+
+      // Teams row
+      var teamsRow = document.createElement("div");
+      teamsRow.className = "match-teams";
+
+      var homeBtn = createMatchTeamBtn(homeTeam, match.id, pred, result, locked, completed);
+      var vsSpan = document.createElement("span");
+      vsSpan.className = "match-vs";
+      vsSpan.textContent = "VS";
+      var awayBtn = createMatchTeamBtn(awayTeam, match.id, pred, result, locked, completed);
+
+      teamsRow.appendChild(homeBtn);
+      teamsRow.appendChild(vsSpan);
+      teamsRow.appendChild(awayBtn);
+
+      // Margin inputs
+      var marginDiv = document.createElement("div");
+      marginDiv.className = "match-margin";
+      if (pred.winner) marginDiv.classList.add("show");
+
+      var runsGroup = document.createElement("div");
+      runsGroup.className = "margin-input-group";
+      var runsLabel = document.createElement("div");
+      runsLabel.className = "margin-input-label";
+      runsLabel.textContent = "RUNS MARGIN";
+      var runsInput = document.createElement("input");
+      runsInput.className = "margin-input";
+      runsInput.type = "number";
+      runsInput.min = "0";
+      runsInput.max = "200";
+      runsInput.placeholder = "0-200";
+      runsInput.value = pred.runs != null ? pred.runs : "";
+      runsInput.disabled = locked;
+      runsGroup.appendChild(runsLabel);
+      runsGroup.appendChild(runsInput);
+
+      var wicketsGroup = document.createElement("div");
+      wicketsGroup.className = "margin-input-group";
+      var wicketsLabel = document.createElement("div");
+      wicketsLabel.className = "margin-input-label";
+      wicketsLabel.textContent = "WICKETS";
+      var wicketsInput = document.createElement("input");
+      wicketsInput.className = "margin-input";
+      wicketsInput.type = "number";
+      wicketsInput.min = "0";
+      wicketsInput.max = "10";
+      wicketsInput.placeholder = "0-10";
+      wicketsInput.value = pred.wickets != null ? pred.wickets : "";
+      wicketsInput.disabled = locked;
+      wicketsGroup.appendChild(wicketsLabel);
+      wicketsGroup.appendChild(wicketsInput);
+
+      marginDiv.appendChild(runsGroup);
+      marginDiv.appendChild(wicketsGroup);
+
+      // Auto-save on margin change
+      (function(matchId) {
+        function onMarginChange() {
+          var r = parseInt(runsInput.value, 10);
+          var w = parseInt(wicketsInput.value, 10);
+          if (r > 200) { runsInput.value = 200; r = 200; }
+          if (w > 10) { wicketsInput.value = 10; w = 10; }
+          if (!matchPredictions[matchId]) matchPredictions[matchId] = {};
+          matchPredictions[matchId].runs = isNaN(r) ? null : r;
+          matchPredictions[matchId].wickets = isNaN(w) ? null : w;
+          debounceSaveMatch(matchId);
+        }
+        runsInput.addEventListener("input", onMarginChange);
+        wicketsInput.addEventListener("input", onMarginChange);
+      })(match.id);
+
+      // Result badge
+      card.appendChild(header);
+      card.appendChild(venue);
+      card.appendChild(teamsRow);
+      card.appendChild(marginDiv);
+
+      if (completed && pred.winner) {
+        var badge = document.createElement("div");
+        badge.className = "match-result-badge";
+        var sc = calcMatchScore(match.id, pred);
+        if (sc > 0) {
+          var baseOnly = pred.winner === result.winner;
+          var hasBonus = sc > (match.phase === "final" ? 40 : match.phase === "playoff" ? 20 : 10);
+          if (hasBonus) {
+            badge.classList.add("bonus");
+            badge.textContent = "+" + sc + " pts (Winner + Margin Bonus!)";
+          } else if (baseOnly) {
+            badge.classList.add("correct");
+            badge.textContent = "+" + sc + " pts (Correct Winner!)";
+          }
+        } else {
+          badge.classList.add("wrong");
+          badge.textContent = "0 pts — " + getTeam(result.winner).short + " won" +
+            (result.marginType === "runs" ? " by " + result.margin + " runs" :
+             result.marginType === "wickets" ? " by " + result.margin + " wickets" :
+             result.marginType === "super_over" ? " (Super Over)" : "");
+        }
+        card.appendChild(badge);
+      }
+
+      list.appendChild(card);
+    }
+  }
+
+  function createMatchTeamBtn(team, matchId, pred, result, locked, completed) {
+    var btn = document.createElement("button");
+    btn.className = "match-team-btn";
+    var isSelected = pred.winner === team.id;
+    if (isSelected) btn.classList.add("selected");
+    if (completed && result) {
+      if (isSelected && pred.winner === result.winner) btn.classList.add("correct");
+      else if (isSelected && pred.winner !== result.winner) btn.classList.add("wrong");
+    }
+    btn.disabled = locked;
+
+    var logo = document.createElement("img");
+    logo.className = "match-team-logo";
+    logo.src = team.logo;
+    logo.alt = team.short;
+    logo.onerror = function() { this.style.display = "none"; };
+
+    var name = document.createElement("span");
+    name.className = "match-team-name";
+    name.textContent = team.short;
+
+    btn.appendChild(logo);
+    btn.appendChild(name);
+
+    if (!locked) {
+      (function(tid, mid) {
+        btn.onclick = function() {
+          selectMatchWinner(mid, tid);
+        };
+      })(team.id, matchId);
+    }
+    return btn;
+  }
+
+  function selectMatchWinner(matchId, teamId) {
+    if (!currentUser) return;
+    if (!matchPredictions[matchId]) matchPredictions[matchId] = {};
+    matchPredictions[matchId].winner = matchPredictions[matchId].winner === teamId ? null : teamId;
+    debounceSaveMatch(matchId);
+    renderMatchList();
+  }
+
+  function debounceSaveMatch(matchId) {
+    if (!currentUser || !db) return;
+    if (matchDebounceTimers[matchId]) clearTimeout(matchDebounceTimers[matchId]);
+    matchDebounceTimers[matchId] = setTimeout(function() {
+      var pred = matchPredictions[matchId];
+      if (!pred) return;
+      var data = {
+        winner: pred.winner || null,
+        runs: pred.runs != null ? pred.runs : null,
+        wickets: pred.wickets != null ? pred.wickets : null,
+        savedAt: new Date().toISOString()
+      };
+      db.ref("match_predictions/" + currentUser.uid + "/" + matchId).set(data);
+    }, 500);
+  }
+
+  function calcMatchScore(matchId, pred) {
+    var result = matchResults[matchId];
+    if (!result || !pred || !pred.winner) return 0;
+    var match = getMatchById(matchId);
+    var phase = match ? match.phase : "league";
+    var basePoints = phase === "final" ? 40 : phase === "playoff" ? 20 : 10;
+    var bonusPoints = phase === "final" ? 10 : 5;
+    var score = 0;
+    if (pred.winner === result.winner) {
+      score += basePoints;
+      if (result.marginType === "runs" && pred.runs != null) {
+        if (Math.abs(pred.runs - result.margin) <= 5) score += bonusPoints;
+      } else if (result.marginType === "wickets" && pred.wickets != null) {
+        if (pred.wickets === result.margin) score += bonusPoints;
+      }
+    }
+    return score;
+  }
+
+  /* ── Lock Button (Playoffs only now) ── */
   function updateLockBtn() {
-    var name = document.getElementById("name-input").value.trim();
+    var name = document.getElementById("name-input");
+    var nameVal = name ? name.value.trim() : "";
     var btn = document.getElementById("lock-btn");
     if (!btn) return;
-    var ready = name.length > 0 && selectedTeams.length === 4;
+    var ready = nameVal.length > 0 && selectedTeams.length === 4;
     btn.classList.toggle("ready", ready);
     btn.setAttribute("aria-disabled", ready ? "false" : "true");
-
-    /* Debounced warning check */
-    if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(function() {
-      var existing = null;
-      for (var i = 0; i < allPredictions.length; i++) {
-        if (allPredictions[i].name.toLowerCase() === name.toLowerCase()) {
-          existing = allPredictions[i]; break;
-        }
-      }
-      var warning = document.getElementById("overwrite-warning");
-      if (warning) {
-        if (existing && name.length > 0) {
-          warning.style.display = "block";
-          warning.textContent = existing.name + " already has a prediction. Submitting will overwrite it.";
-        } else {
-          warning.style.display = "none";
-        }
-      }
-    }, 200);
   }
 
   /* ── Confirm Modal ── */
   function showConfirmModal() {
+    if (!currentUser) { alert("Please sign in."); return; }
     var name = document.getElementById("name-input").value.trim();
-    if (!name || selectedTeams.length !== 4) return;
+    if (!name) return;
+    if (selectedTeams.length !== 4) return;
 
     var picks = document.getElementById("modal-picks");
     if (picks) {
@@ -1141,23 +1917,26 @@ nav {
   }
   window.confirmSave = confirmSave;
 
-  /* ── Save Prediction ── */
+  /* ── Save Prediction (Playoffs only) ── */
   function savePrediction() {
+    if (!currentUser) { alert("Please sign in."); return; }
     var nameInput = document.getElementById("name-input");
-    var name = nameInput.value.trim();
-    if (!name || selectedTeams.length !== 4) return;
+    var name = nameInput ? nameInput.value.trim() : "";
+    if (!name) return;
 
     var btn = document.getElementById("lock-btn");
     if (btn) { btn.classList.remove("ready"); btn.textContent = "LOCKING IN..."; }
 
-    var key = name.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    db.ref("predictions/" + key).set({
+    var data = {
       name: name,
+      uid: currentUser.uid,
+      email: currentUser.email,
+      photoURL: currentUser.photoURL || "",
       teams: selectedTeams.slice(),
       lockedAt: new Date().toISOString()
-    }).then(function() {
-      localStorage.setItem("ipl_pred_name", name);
-      myName = name;
+    };
+
+    db.ref("predictions/" + currentUser.uid).set(data).then(function() {
       if (btn) btn.textContent = "LOCK IN PREDICTION";
       switchScreen("leaderboard");
     }).catch(function(err) {
@@ -1167,14 +1946,40 @@ nav {
   }
 
   /* ── Scoring ── */
-  function calcScore(pred) {
-    if (!actualResults || actualResults.length < 4) return null;
+  function calcPlayoffScore(pred) {
+    var resTeams = getResultsTeams();
+    if (resTeams.length < 4) return 0;
     var score = 0;
-    for (var i = 0; i < pred.teams.length; i++) {
-      if (actualResults.indexOf(pred.teams[i]) > -1) score += 10;
-      if (actualResults[i] === pred.teams[i]) score += 5;
+    if (pred.teams) {
+      for (var i = 0; i < pred.teams.length; i++) {
+        if (resTeams.indexOf(pred.teams[i]) > -1) score += 10;
+        if (resTeams[i] === pred.teams[i]) score += 5;
+      }
     }
     return score;
+  }
+
+  function calcAllMatchScore(uid) {
+    var userPreds = allMatchPredictions[uid] || {};
+    var total = 0;
+    for (var matchId in userPreds) {
+      if (userPreds.hasOwnProperty(matchId)) {
+        total += calcMatchScore(matchId, userPreds[matchId]);
+      }
+    }
+    return total;
+  }
+
+  function calcTotalScore(pred) {
+    var resTeams = getResultsTeams();
+    var hasPlayoffResults = resTeams.length >= 4;
+    var hasAnyMatchResults = Object.keys(matchResults).length > 0;
+    if (!hasPlayoffResults && !hasAnyMatchResults) return null;
+
+    var total = 0;
+    if (hasPlayoffResults) total += calcPlayoffScore(pred);
+    if (pred.uid) total += calcAllMatchScore(pred.uid);
+    return total;
   }
 
   /* ── Leaderboard ── */
@@ -1183,17 +1988,19 @@ nav {
     var resultsBar = document.getElementById("results-bar");
     var legend = document.getElementById("legend");
     if (!content) return;
-    var hasResults = actualResults && actualResults.length >= 4;
+    var resTeams = getResultsTeams();
+    var hasPlayoffResults = resTeams.length >= 4;
+    var hasAnyMatchResults = Object.keys(matchResults).length > 0;
 
-    if (hasResults) {
+    if (hasPlayoffResults) {
       if (resultsBar) resultsBar.classList.add("show");
       if (legend) legend.classList.add("show");
 
       var teamsDiv = document.getElementById("results-teams");
       if (teamsDiv) {
         teamsDiv.innerHTML = "";
-        for (var r = 0; r < actualResults.length; r++) {
-          var rt = getTeam(actualResults[r]);
+        for (var r = 0; r < resTeams.length; r++) {
+          var rt = getTeam(resTeams[r]);
           if (!rt) continue;
           var chip = document.createElement("span");
           chip.className = "result-chip";
@@ -1224,10 +2031,10 @@ nav {
     }
 
     var sorted = allPredictions.slice().sort(function(a, b) {
-      var sa = calcScore(a); var sb = calcScore(b);
-      if (sa !== null && sb !== null) return sb - sa;
-      if (sa !== null) return -1;
-      if (sb !== null) return 1;
+      var sa = calcTotalScore(a); var sb = calcTotalScore(b);
+      if (sa !== null && sb !== null && sa !== sb) return sb - sa;
+      if (sa !== null && sb === null) return -1;
+      if (sb !== null && sa === null) return 1;
       return new Date(a.lockedAt) - new Date(b.lockedAt);
     });
 
@@ -1237,7 +2044,9 @@ nav {
 
     for (var i = 0; i < sorted.length; i++) {
       var pred = sorted[i];
-      var score = calcScore(pred);
+      var score = calcTotalScore(pred);
+      var playoffPts = hasPlayoffResults ? calcPlayoffScore(pred) : 0;
+      var matchPts = pred.uid ? calcAllMatchScore(pred.uid) : 0;
       var d = new Date(pred.lockedAt);
       var dateStr = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + " " +
                     d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
@@ -1245,7 +2054,6 @@ nav {
       var row = document.createElement("div");
       row.className = "lb-row";
 
-      /* Top row: rank + name + score */
       var rowTop = document.createElement("div");
       rowTop.className = "lb-row-top";
 
@@ -1260,20 +2068,51 @@ nav {
       rankEl.textContent = i + 1;
 
       var infoDiv = document.createElement("div");
+
       var nameP = document.createElement("p");
       nameP.className = "lb-name";
-      nameP.textContent = pred.name;
-      if (myName && pred.name.toLowerCase() === myName.toLowerCase()) {
+      if (pred.photoURL) {
+        var lbAv = document.createElement("img");
+        lbAv.className = "lb-avatar";
+        lbAv.src = pred.photoURL;
+        lbAv.alt = "";
+        lbAv.onerror = function() { this.style.display = "none"; };
+        lbAv.style.marginRight = "6px";
+        lbAv.style.verticalAlign = "middle";
+        nameP.appendChild(lbAv);
+      }
+      nameP.appendChild(document.createTextNode(pred.name));
+      if (currentUser && pred.uid === currentUser.uid) {
         var youBadge = document.createElement("span");
         youBadge.className = "lb-you";
         youBadge.textContent = "YOU";
         nameP.appendChild(youBadge);
       }
+      if (i === 0) {
+        var prizeBadge = document.createElement("span");
+        prizeBadge.className = "lb-prize-badge";
+        prizeBadge.innerHTML = "&#127942; PRIZE";
+        nameP.appendChild(prizeBadge);
+      }
+
       var timeP = document.createElement("p");
       timeP.className = "lb-time";
       timeP.textContent = "Locked " + dateStr;
+
+      // Score breakdown sub-line
+      var breakdownP = document.createElement("p");
+      breakdownP.className = "lb-time";
+      breakdownP.style.color = "var(--text-dim)";
+      if (score !== null && (hasPlayoffResults || hasAnyMatchResults)) {
+        var parts = [];
+        if (hasPlayoffResults) parts.push("Playoffs: " + playoffPts);
+        if (hasAnyMatchResults) parts.push("Matches: " + matchPts);
+        breakdownP.textContent = parts.join(" | ");
+      }
+
       infoDiv.appendChild(nameP);
       infoDiv.appendChild(timeP);
+      if (score !== null) infoDiv.appendChild(breakdownP);
       left.appendChild(rankEl);
       left.appendChild(infoDiv);
       rowTop.appendChild(left);
@@ -1292,11 +2131,12 @@ nav {
         rowTop.appendChild(scoreDiv);
       }
 
-      /* Bottom: team chips */
+      /* Team chips */
       var teamsRow = document.createElement("div");
       teamsRow.className = "lb-teams";
-      for (var j = 0; j < pred.teams.length; j++) {
-        var t = getTeam(pred.teams[j]);
+      var predTeams = pred.teams || [];
+      for (var j = 0; j < predTeams.length; j++) {
+        var t = getTeam(predTeams[j]);
         if (!t) continue;
         var lbChip = document.createElement("span");
         lbChip.className = "lb-chip";
@@ -1305,9 +2145,9 @@ nav {
         lbLogo.src = t.logo;
         lbLogo.alt = t.short;
         lbLogo.onerror = function() { this.style.display = "none"; };
-        if (hasResults) {
-          var cTeam = actualResults.indexOf(pred.teams[j]) > -1;
-          var cPos = actualResults[j] === pred.teams[j];
+        if (hasPlayoffResults) {
+          var cTeam = resTeams.indexOf(predTeams[j]) > -1;
+          var cPos = resTeams[j] === predTeams[j];
           if (cPos) {
             lbChip.style.backgroundColor = "#22c55e";
             lbChip.style.color = "#ffffff";
@@ -1352,9 +2192,11 @@ nav {
       panel.classList.remove("show");
       return;
     }
-    tempResults = actualResults && actualResults.length >= 4 ? actualResults.slice() : [];
+    var resTeams = getResultsTeams();
+    tempResults = resTeams.length >= 4 ? resTeams.slice() : [];
     panel.classList.add("show");
     renderAdminGrid();
+    populateAdminMatchSelect();
   }
   window.toggleAdmin = toggleAdmin;
 
@@ -1386,27 +2228,152 @@ nav {
           if (idx > -1) tempResults.splice(idx, 1);
           else if (tempResults.length < 4) tempResults.push(tid);
           renderAdminGrid();
+          updateAdminSaveBtn();
         };
       })(team.id);
       grid.appendChild(btn);
     }
+    updateAdminSaveBtn();
+  }
+
+  function updateAdminSaveBtn() {
     var sb = document.getElementById("admin-save");
     if (sb) sb.disabled = tempResults.length !== 4;
   }
 
   function saveResults() {
     if (tempResults.length !== 4) return;
-    var pin = document.getElementById("admin-pin").value;
-    if (pin !== ADMIN_PIN) {
-      alert("Incorrect PIN.");
-      return;
-    }
-    db.ref("results").set(tempResults).then(function() {
+    db.ref("results").set({
+      teams: tempResults
+    }).then(function() {
       var panel = document.getElementById("admin-panel");
       if (panel) panel.classList.remove("show");
     }).catch(function() { alert("Failed to save results."); });
   }
   window.saveResults = saveResults;
+
+  function saveDeadlines() {
+    var pdi = document.getElementById("admin-playoff-deadline");
+    var deadlines = {};
+    if (pdi && pdi.value) deadlines.playoffs = new Date(pdi.value).toISOString();
+    db.ref("deadlines").set(deadlines).then(function() {
+      alert("Deadlines saved!");
+    }).catch(function() { alert("Failed to save deadlines."); });
+  }
+  window.saveDeadlines = saveDeadlines;
+
+  /* ── Admin Match Results ── */
+  var adminMatchWinner = null;
+  var adminMatchMarginType = null;
+  var adminMatchMargin = null;
+
+  function populateAdminMatchSelect() {
+    var sel = document.getElementById("admin-match-select");
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Select match...</option>';
+    for (var i = 0; i < MATCHES.length; i++) {
+      var m = MATCHES[i];
+      var home = getTeam(m.home);
+      var away = getTeam(m.away);
+      var opt = document.createElement("option");
+      opt.value = m.id;
+      opt.textContent = "Match " + m.id + ": " + (home ? home.short : m.home) + " vs " + (away ? away.short : m.away) + (matchResults[m.id] ? " \u2713" : "");
+      sel.appendChild(opt);
+    }
+  }
+
+  function onAdminMatchSelect() {
+    var sel = document.getElementById("admin-match-select");
+    var detail = document.getElementById("admin-match-detail");
+    if (!sel || !detail) return;
+    var matchId = sel.value;
+    if (!matchId) { detail.style.display = "none"; return; }
+    detail.style.display = "block";
+    var match = getMatchById(parseInt(matchId, 10));
+    if (!match) return;
+
+    var existing = matchResults[matchId] || {};
+    adminMatchWinner = existing.winner || null;
+    adminMatchMarginType = existing.marginType || null;
+    adminMatchMargin = existing.margin != null ? existing.margin : null;
+
+    renderAdminMatchDetail(match);
+  }
+  window.onAdminMatchSelect = onAdminMatchSelect;
+
+  function renderAdminMatchDetail(match) {
+    var container = document.getElementById("admin-match-teams");
+    if (!container) return;
+    var homeTeam = getTeam(match.home);
+    var awayTeam = getTeam(match.away);
+    container.innerHTML = "";
+
+    [homeTeam, awayTeam].forEach(function(team) {
+      var btn = document.createElement("button");
+      btn.className = "admin-team-btn";
+      var isSel = adminMatchWinner === team.id;
+      btn.style.backgroundColor = isSel ? team.color : "transparent";
+      btn.style.color = isSel ? (team.dt ? "#1C1C5E" : "#ffffff") : "#999999";
+      btn.style.borderColor = isSel ? team.color : "#333333";
+      btn.textContent = team.short;
+      btn.onclick = function() {
+        adminMatchWinner = adminMatchWinner === team.id ? null : team.id;
+        renderAdminMatchDetail(match);
+      };
+      container.appendChild(btn);
+    });
+
+    // Margin type buttons
+    var typeContainer = document.getElementById("admin-match-margin-type");
+    if (typeContainer) {
+      typeContainer.innerHTML = "";
+      ["runs", "wickets", "super_over", "no_result"].forEach(function(mt) {
+        var btn = document.createElement("button");
+        btn.className = "admin-team-btn";
+        var isSel = adminMatchMarginType === mt;
+        btn.style.backgroundColor = isSel ? "var(--gold)" : "transparent";
+        btn.style.color = isSel ? "#1C1C5E" : "#999999";
+        btn.style.borderColor = isSel ? "var(--gold)" : "#333333";
+        btn.textContent = mt.replace("_", " ");
+        btn.onclick = function() {
+          adminMatchMarginType = adminMatchMarginType === mt ? null : mt;
+          renderAdminMatchDetail(match);
+        };
+        typeContainer.appendChild(btn);
+      });
+    }
+
+    var marginInput = document.getElementById("admin-match-margin-num");
+    if (marginInput) {
+      marginInput.value = adminMatchMargin != null ? adminMatchMargin : "";
+      marginInput.disabled = adminMatchMarginType === "super_over" || adminMatchMarginType === "no_result";
+    }
+  }
+
+  function saveMatchResult() {
+    var sel = document.getElementById("admin-match-select");
+    if (!sel || !sel.value) return;
+    var matchId = sel.value;
+    var marginInput = document.getElementById("admin-match-margin-num");
+    var margin = marginInput ? parseInt(marginInput.value, 10) : 0;
+
+    if (!adminMatchWinner || !adminMatchMarginType) {
+      alert("Select winner and margin type");
+      return;
+    }
+
+    var data = {
+      winner: adminMatchWinner,
+      marginType: adminMatchMarginType,
+      margin: isNaN(margin) ? 0 : margin
+    };
+
+    db.ref("match_results/" + matchId).set(data).then(function() {
+      alert("Match " + matchId + " result saved!");
+      populateAdminMatchSelect();
+    }).catch(function() { alert("Failed to save match result."); });
+  }
+  window.saveMatchResult = saveMatchResult;
 
   /* ── Share ── */
   function shareApp() {
@@ -1433,16 +2400,30 @@ nav {
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
+    auth = firebase.auth();
+    googleProvider = new firebase.auth.GoogleAuthProvider();
+
     renderHeroPlayers();
     renderTeamsGrid();
     loadData();
     watchConnection();
 
+    // Auth state listener
+    auth.onAuthStateChanged(function(user) {
+      currentUser = user;
+      updateAuthUI();
+    });
+
     var nameInput = document.getElementById("name-input");
     if (nameInput) {
-      if (myName) nameInput.value = myName;
       nameInput.addEventListener("input", updateLockBtn);
     }
+
+    // Countdown timer
+    countdownTimer = setInterval(function() {
+      if (currentScreen === "predict") updateDeadlineUI();
+      if (currentScreen === "matches") renderMatchList();
+    }, 60000);
 
     /* Close modal on overlay click */
     var overlay = document.getElementById("confirm-modal");
